@@ -7,6 +7,7 @@ import { Box, Typography, Button, OutlinedInput } from '@mui/material'
 
 // Project import
 import { StyledButton } from '@/ui-component/button/StyledButton'
+import { TooltipWithParser } from '@/ui-component/tooltip/TooltipWithParser'
 
 // Icons
 import { IconX } from '@tabler/icons'
@@ -16,7 +17,6 @@ import chatflowsApi from '@/api/chatflows'
 
 // utils
 import useNotifier from '@/utils/useNotifier'
-import { TooltipWithParser } from '@/ui-component/tooltip/TooltipWithParser'
 
 const RateLimit = () => {
     const dispatch = useDispatch()
@@ -117,6 +117,7 @@ const RateLimit = () => {
                         value={message}
                         placeholder={placeholder}
                         name={fieldName}
+                        size='small'
                         onChange={(e) => {
                             onTextChanged(e.target.value, fieldName)
                         }}
@@ -130,11 +131,17 @@ const RateLimit = () => {
         <>
             {/*Rate Limit*/}
             <Typography variant='h4' sx={{ mb: 1 }}>
-                Rate Limit
+                Rate Limit{' '}
+                <TooltipWithParser
+                    style={{ mb: 1, mt: 2, marginLeft: 10 }}
+                    title={
+                        'Visit <a target="_blank" href="https://docs.flowiseai.com/rate-limit">Rate Limit Setup Guide</a> to set up Rate Limit correctly in your hosting environment.'
+                    }
+                />
             </Typography>
-            {textField(limitMax, 'limitMax', 'Message Limit per Duration', 'number')}
-            {textField(limitDuration, 'limitDuration', 'Duration in Second', 'number')}
-            {textField(limitMsg, 'limitMsg', 'Limit Message', 'string')}
+            {textField(limitMax, 'limitMax', 'Message Limit per Duration', 'number', '5')}
+            {textField(limitDuration, 'limitDuration', 'Duration in Second', 'number', '60')}
+            {textField(limitMsg, 'limitMsg', 'Limit Message', 'string', 'You have reached the quota')}
 
             <StyledButton style={{ marginBottom: 10, marginTop: 10 }} variant='contained' onClick={() => onSave()}>
                 Save Changes
