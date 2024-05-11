@@ -125,9 +125,6 @@ class Zep_Existing_VectorStores implements INode {
             return retriever
         } else if (output === 'vectorStore') {
             ;(vectorStore as any).k = k
-            if (zepMetadataFilter) {
-                ;(vectorStore as any).filter = zepConfig.filter
-            }
             return vectorStore
         }
         return vectorStore

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import PropTypes from 'prop-types'
 
-import { IconDatabaseImport, IconX } from '@tabler/icons-react'
+import { IconDatabaseImport, IconX } from '@tabler/icons'
 
 // project import
 import { StyledFab } from '@/ui-component/button/StyledFab'

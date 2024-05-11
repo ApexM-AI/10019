@@ -1,11 +1,19 @@
+import path from 'path'
 import { StatusCodes } from 'http-status-codes'
 import { InternalFlowiseError } from '../../errors/internalFlowiseError'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { IChatFlow } from '../../Interface'
 import { ChatFlow } from '../../database/entities/ChatFlow'
-import { getAppVersion, getTelemetryFlowObj, isFlowValidForStream, constructGraphs, getEndingNodes } from '../../utils'
+import {
+    getAppVersion,
+    getTelemetryFlowObj,
+    deleteFolderRecursive,
+    isFlowValidForStream,
+    constructGraphs,
+    getEndingNodes
+} from '../../utils'
 import logger from '../../utils/logger'
-import { removeFolderFromStorage } from 'flowise-components'
+import { getStoragePath } from 'flowise-components'
 import { IReactFlowObject } from '../../Interface'
 import { utilGetUploadsConfig } from '../../utils/getUploadsConfig'
 import { ChatMessage } from '../../database/entities/ChatMessage'
@@ -13,7 +21,6 @@ import { ChatMessageFeedback } from '../../database/entities/ChatMessageFeedback
 import { UpsertHistory } from '../../database/entities/UpsertHistory'
 import { containsBase64File, updateFlowDataWithFilePaths } from '../../utils/fileRepository'
 import { getErrorMessage } from '../../errors/utils'
-import documentStoreService from '../../services/documentstore'
 
 // Check if chatflow valid for streaming
 const checkIfChatflowIsValidForStreaming = async (chatflowId: string): Promise<any> => {
@@ -34,20 +41,40 @@ const checkIfChatflowIsValidForStreaming = async (chatflowId: string): Promise<a
         const edges = parsedFlowData.edges
         const { graph, nodeDependencies } = constructGraphs(nodes, edges)
 
-        const endingNodes = getEndingNodes(nodeDependencies, graph, nodes)
-
-        let isStreaming = false
-        for (const endingNode of endingNodes) {
-            const endingNodeData = endingNode.data
-            const isEndingNode = endingNodeData?.outputs?.output === 'EndingNode'
-            // Once custom function ending node exists, flow is always unavailable to stream
-            if (isEndingNode) {
-                return { isStreaming: false }
-            }
-            isStreaming = isFlowValidForStream(nodes, endingNodeData)
+        const endingNodeIds = getEndingNodes(nodeDependencies, graph)
+        if (!endingNodeIds.length) {
+            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Ending nodes not found`)
         }
 
-        const dbResponse = { isStreaming: isStreaming }
+        const endingNodes = nodes.filter((nd) => endingNodeIds.includes(nd.id))
+
+        let isStreaming = false
+        let isEndingNodeExists = endingNodes.find((node) => node.data?.outputs?.output === 'EndingNode')
+
+        for (const endingNode of endingNodes) {
+            const endingNodeData = endingNode.data
+            if (!endingNodeData) {
+                throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Ending node ${endingNode.id} data not found`)
+            }
+
+            const isEndingNode = endingNodeData?.outputs?.output === 'EndingNode'
+
+            if (!isEndingNode) {
+                if (
+                    endingNodeData &&
+                    endingNodeData.category !== 'Chains' &&
+                    endingNodeData.category !== 'Agents' &&
+                    endingNodeData.category !== 'Engine'
+                ) {
+                    throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Ending node must be either a Chain or Agent`)
+                }
+            }
+
+            isStreaming = isEndingNode ? false : isFlowValidForStream(nodes, endingNodeData)
+        }
+
+        // Once custom function ending node exists, flow is always unavailable to stream
+        const dbResponse = { isStreaming: isEndingNodeExists ? false : isStreaming }
         return dbResponse
     } catch (error) {
         throw new InternalFlowiseError(
@@ -76,8 +103,8 @@ const deleteChatflow = async (chatflowId: string): Promise<any> => {
         const dbResponse = await appServer.AppDataSource.getRepository(ChatFlow).delete({ id: chatflowId })
         try {
             // Delete all uploads corresponding to this chatflow
-            await removeFolderFromStorage(chatflowId)
-            await documentStoreService.updateDocumentStoreUsage(chatflowId, undefined)
+            const directory = path.join(getStoragePath(), chatflowId)
+            deleteFolderRecursive(directory)
 
             // Delete all chat messages
             await appServer.AppDataSource.getRepository(ChatMessage).delete({ chatflowid: chatflowId })
@@ -167,8 +194,7 @@ const saveChatflow = async (newChatFlow: ChatFlow): Promise<any> => {
             const step1Results = await appServer.AppDataSource.getRepository(ChatFlow).save(chatflow)
 
             // step 2 - convert base64 to file paths and update the chatflow
-            step1Results.flowData = await updateFlowDataWithFilePaths(step1Results.id, incomingFlowData)
-            await _checkAndUpdateDocumentStoreUsage(step1Results)
+            step1Results.flowData = updateFlowDataWithFilePaths(step1Results.id, incomingFlowData)
             dbResponse = await appServer.AppDataSource.getRepository(ChatFlow).save(step1Results)
         } else {
             const chatflow = appServer.AppDataSource.getRepository(ChatFlow).create(newChatFlow)
@@ -192,10 +218,9 @@ const updateChatflow = async (chatflow: ChatFlow, updateChatFlow: ChatFlow): Pro
     try {
         const appServer = getRunningExpressApp()
         if (updateChatFlow.flowData && containsBase64File(updateChatFlow)) {
-            updateChatFlow.flowData = await updateFlowDataWithFilePaths(chatflow.id, updateChatFlow.flowData)
+            updateChatFlow.flowData = updateFlowDataWithFilePaths(chatflow.id, updateChatFlow.flowData)
         }
         const newDbChatflow = appServer.AppDataSource.getRepository(ChatFlow).merge(chatflow, updateChatFlow)
-        await _checkAndUpdateDocumentStoreUsage(newDbChatflow)
         const dbResponse = await appServer.AppDataSource.getRepository(ChatFlow).save(newDbChatflow)
 
         // chatFlowPool is initialized only when a flow is opened
@@ -262,18 +287,6 @@ const getSinglePublicChatbotConfig = async (chatflowId: string): Promise<any> =>
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getSinglePublicChatbotConfig - ${getErrorMessage(error)}`
         )
-    }
-}
-
-const _checkAndUpdateDocumentStoreUsage = async (chatflow: ChatFlow) => {
-    const parsedFlowData: IReactFlowObject = JSON.parse(chatflow.flowData)
-    const nodes = parsedFlowData.nodes
-    // from the nodes array find if there is a node with name == documentStore)
-    const node = nodes.length > 0 && nodes.find((node) => node.data.name === 'documentStore')
-    if (!node || !node.data || !node.data.inputs || node.data.inputs['selectedStore'] === undefined) {
-        await documentStoreService.updateDocumentStoreUsage(chatflow.id, undefined)
-    } else {
-        await documentStoreService.updateDocumentStoreUsage(chatflow.id, node.data.inputs['selectedStore'])
     }
 }
 

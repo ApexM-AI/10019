@@ -21,7 +21,7 @@ import { useTheme } from '@mui/material/styles'
 import { StyledButton } from '@/ui-component/button/StyledButton'
 
 // Icons
-import { IconX, IconCopy } from '@tabler/icons-react'
+import { IconX, IconCopy } from '@tabler/icons'
 
 // API
 import apikeyApi from '@/api/apikey'

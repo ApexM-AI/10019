@@ -42,7 +42,6 @@ export interface IChatMessage {
     memoryType?: string
     sessionId?: string
     createdDate: Date
-    leadEmail?: string
 }
 
 export interface IChatMessageFeedback {
@@ -91,16 +90,6 @@ export interface IVariable {
     value: string
     type: string
     updatedDate: Date
-    createdDate: Date
-}
-
-export interface ILead {
-    id: string
-    name?: string
-    email?: string
-    phone?: string
-    chatflowid: string
-    chatId: string
     createdDate: Date
 }
 
@@ -211,7 +200,6 @@ export interface IncomingInput {
     chatId?: string
     stopNodeId?: string
     uploads?: IFileUpload[]
-    leadEmail?: string
 }
 
 export interface IActiveChatflows {
@@ -253,6 +241,3 @@ export interface IUploadFileSizeAndTypes {
     fileTypes: string[]
     maxUploadSize: number
 }
-
-// DocumentStore related
-export * from './Interface.DocumentStore'

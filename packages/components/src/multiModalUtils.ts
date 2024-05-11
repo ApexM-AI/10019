@@ -1,11 +1,13 @@
 import { IVisionChatModal, ICommonObject, IFileUpload, IMultiModalOption, INodeData, MessageContentImageUrl } from './Interface'
-import { getFileFromStorage } from './storageUtils'
+import path from 'path'
+import { getStoragePath } from './utils'
+import fs from 'fs'
 
-export const addImagesToMessages = async (
+export const addImagesToMessages = (
     nodeData: INodeData,
     options: ICommonObject,
     multiModalOption?: IMultiModalOption
-): Promise<MessageContentImageUrl[]> => {
+): MessageContentImageUrl[] => {
     const imageContent: MessageContentImageUrl[] = []
     let model = nodeData.inputs?.model
 
@@ -16,8 +18,10 @@ export const addImagesToMessages = async (
             for (const upload of imageUploads) {
                 let bf = upload.data
                 if (upload.type == 'stored-file') {
-                    const contents = await getFileFromStorage(upload.name, options.chatflowid, options.chatId)
+                    const filePath = path.join(getStoragePath(), options.chatflowid, options.chatId, upload.name)
+
                     // as the image is stored in the server, read the file and convert it to base64
+                    const contents = fs.readFileSync(filePath)
                     bf = 'data:' + upload.mime + ';base64,' + contents.toString('base64')
 
                     imageContent.push({

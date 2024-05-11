@@ -16,7 +16,7 @@ import {
     ListItemText
 } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { IconX } from '@tabler/icons-react'
+import { IconX } from '@tabler/icons'
 
 // Project import
 import CredentialInputHandler from '@/views/canvas/CredentialInputHandler'

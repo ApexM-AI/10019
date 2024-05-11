@@ -11,7 +11,9 @@ import { Document } from '@langchain/core/documents'
 import { Embeddings } from '@langchain/core/embeddings'
 import { ICommonObject, INode, INodeData, INodeOutputsValue, INodeParams, IndexingResult } from '../../../src/Interface'
 import { getBaseClasses, getCredentialData, getCredentialParam } from '../../../src/utils'
-import { getFileFromStorage } from '../../../src'
+import { getStoragePath } from '../../../src'
+import fs from 'fs'
+import path from 'path'
 
 class Vectara_VectorStores implements INode {
     label: string
@@ -195,7 +197,8 @@ class Vectara_VectorStores implements INode {
                 const chatflowid = options.chatflowid
 
                 for (const file of files) {
-                    const fileData = await getFileFromStorage(file, chatflowid)
+                    const fileInStorage = path.join(getStoragePath(), chatflowid, file)
+                    const fileData = fs.readFileSync(fileInStorage)
                     const blob = new Blob([fileData])
                     vectaraFiles.push({ blob: blob, fileName: getFileName(file) })
                 }
@@ -272,9 +275,6 @@ class Vectara_VectorStores implements INode {
             return retriever
         } else if (output === 'vectorStore') {
             ;(vectorStore as any).k = k
-            if (vectaraMetadataFilter) {
-                ;(vectorStore as any).filter = vectaraFilter.filter
-            }
             return vectorStore
         }
         return vectorStore

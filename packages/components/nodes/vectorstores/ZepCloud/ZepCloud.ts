@@ -131,7 +131,7 @@ class Zep_CloudVectorStores implements INode {
         }
         zepConfig.client = await ZepClient.init(zepConfig.apiKey)
         const vectorStore = await ZepExistingVS.init(zepConfig)
-        return resolveVectorStoreOrRetriever(nodeData, vectorStore, zepConfig.filter)
+        return resolveVectorStoreOrRetriever(nodeData, vectorStore)
     }
 }
 

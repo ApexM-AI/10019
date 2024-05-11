@@ -1,8 +1,9 @@
-import { omit } from 'lodash'
-import { IDocument, ICommonObject, INode, INodeData, INodeParams } from '../../../src/Interface'
+import { ICommonObject, INode, INodeData, INodeParams } from '../../../src/Interface'
 import { TextSplitter } from 'langchain/text_splitter'
 import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
-import { getFileFromStorage } from '../../../src'
+import { getStoragePath } from '../../../src'
+import fs from 'fs'
+import path from 'path'
 
 class Pdf_DocumentLoaders implements INode {
     label: string
@@ -61,21 +62,9 @@ class Pdf_DocumentLoaders implements INode {
                 additionalParams: true
             },
             {
-                label: 'Additional Metadata',
+                label: 'Metadata',
                 name: 'metadata',
                 type: 'json',
-                description: 'Additional metadata to be added to the extracted documents',
-                optional: true,
-                additionalParams: true
-            },
-            {
-                label: 'Omit Metadata Keys',
-                name: 'omitMetadataKeys',
-                type: 'string',
-                rows: 4,
-                description:
-                    'Each document loader comes with a default set of metadata keys that are extracted from the document. You can use this field to omit some of the default metadata keys. The value should be a list of keys, seperated by comma',
-                placeholder: 'key1, key2, key3.nestedKey1',
                 optional: true,
                 additionalParams: true
             }
@@ -88,14 +77,8 @@ class Pdf_DocumentLoaders implements INode {
         const usage = nodeData.inputs?.usage as string
         const metadata = nodeData.inputs?.metadata
         const legacyBuild = nodeData.inputs?.legacyBuild as boolean
-        const _omitMetadataKeys = nodeData.inputs?.omitMetadataKeys as string
 
-        let omitMetadataKeys: string[] = []
-        if (_omitMetadataKeys) {
-            omitMetadataKeys = _omitMetadataKeys.split(',').map((key) => key.trim())
-        }
-
-        let docs: IDocument[] = []
+        let alldocs: any[] = []
         let files: string[] = []
 
         //FILE-STORAGE::["CONTRIBUTING.md","LICENSE.md","README.md"]
@@ -109,9 +92,10 @@ class Pdf_DocumentLoaders implements INode {
             const chatflowid = options.chatflowid
 
             for (const file of files) {
-                const fileData = await getFileFromStorage(file, chatflowid)
+                const fileInStorage = path.join(getStoragePath(), chatflowid, file)
+                const fileData = fs.readFileSync(fileInStorage)
                 const bf = Buffer.from(fileData)
-                await this.extractDocs(usage, bf, legacyBuild, textSplitter, docs)
+                await this.extractDocs(usage, bf, legacyBuild, textSplitter, alldocs)
             }
         } else {
             if (pdfFileBase64.startsWith('[') && pdfFileBase64.endsWith(']')) {
@@ -124,38 +108,30 @@ class Pdf_DocumentLoaders implements INode {
                 const splitDataURI = file.split(',')
                 splitDataURI.pop()
                 const bf = Buffer.from(splitDataURI.pop() || '', 'base64')
-                await this.extractDocs(usage, bf, legacyBuild, textSplitter, docs)
+                await this.extractDocs(usage, bf, legacyBuild, textSplitter, alldocs)
             }
         }
 
         if (metadata) {
             const parsedMetadata = typeof metadata === 'object' ? metadata : JSON.parse(metadata)
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
+            let finaldocs = []
+            for (const doc of alldocs) {
+                const newdoc = {
+                    ...doc,
+                    metadata: {
                         ...doc.metadata,
                         ...parsedMetadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
-        } else {
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
-                        ...doc.metadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
+                    }
+                }
+                finaldocs.push(newdoc)
+            }
+            return finaldocs
         }
 
-        return docs
+        return alldocs
     }
 
-    private async extractDocs(usage: string, bf: Buffer, legacyBuild: boolean, textSplitter: TextSplitter, docs: IDocument[]) {
+    private async extractDocs(usage: string, bf: Buffer, legacyBuild: boolean, textSplitter: TextSplitter, alldocs: any[]) {
         if (usage === 'perFile') {
             const loader = new PDFLoader(new Blob([bf]), {
                 splitPages: false,
@@ -164,9 +140,11 @@ class Pdf_DocumentLoaders implements INode {
                     legacyBuild ? import('pdfjs-dist/legacy/build/pdf.js') : import('pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js')
             })
             if (textSplitter) {
-                docs.push(...(await loader.loadAndSplit(textSplitter)))
+                const docs = await loader.loadAndSplit(textSplitter)
+                alldocs.push(...docs)
             } else {
-                docs.push(...(await loader.load()))
+                const docs = await loader.load()
+                alldocs.push(...docs)
             }
         } else {
             const loader = new PDFLoader(new Blob([bf]), {
@@ -175,9 +153,11 @@ class Pdf_DocumentLoaders implements INode {
                     legacyBuild ? import('pdfjs-dist/legacy/build/pdf.js') : import('pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js')
             })
             if (textSplitter) {
-                docs.push(...(await loader.loadAndSplit(textSplitter)))
+                const docs = await loader.loadAndSplit(textSplitter)
+                alldocs.push(...docs)
             } else {
-                docs.push(...(await loader.load()))
+                const docs = await loader.load()
+                alldocs.push(...docs)
             }
         }
     }

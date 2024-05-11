@@ -1,5 +1,4 @@
-import { omit } from 'lodash'
-import { ICommonObject, IDocument, INode, INodeData, INodeParams } from '../../../src/Interface'
+import { ICommonObject, INode, INodeData, INodeParams } from '../../../src/Interface'
 import { TextSplitter } from 'langchain/text_splitter'
 import { Browser, Page, PlaywrightWebBaseLoader, PlaywrightWebBaseLoaderOptions } from 'langchain/document_loaders/web/playwright'
 import { test } from 'linkifyjs'
@@ -54,7 +53,6 @@ class Playwright_DocumentLoaders implements INode {
                         description: 'Scrape relative links from XML sitemap URL'
                     }
                 ],
-                default: 'webCrawl',
                 optional: true,
                 additionalParams: true
             },
@@ -108,21 +106,9 @@ class Playwright_DocumentLoaders implements INode {
                 description: 'CSS selectors like .div or #div'
             },
             {
-                label: 'Additional Metadata',
+                label: 'Metadata',
                 name: 'metadata',
                 type: 'json',
-                description: 'Additional metadata to be added to the extracted documents',
-                optional: true,
-                additionalParams: true
-            },
-            {
-                label: 'Omit Metadata Keys',
-                name: 'omitMetadataKeys',
-                type: 'string',
-                rows: 4,
-                description:
-                    'Each document loader comes with a default set of metadata keys that are extracted from the document. You can use this field to omit some of the default metadata keys. The value should be a list of keys, seperated by comma',
-                placeholder: 'key1, key2, key3.nestedKey1',
                 optional: true,
                 additionalParams: true
             }
@@ -137,12 +123,6 @@ class Playwright_DocumentLoaders implements INode {
         let limit = parseInt(nodeData.inputs?.limit as string)
         let waitUntilGoToOption = nodeData.inputs?.waitUntilGoToOption as 'load' | 'domcontentloaded' | 'networkidle' | 'commit' | undefined
         let waitForSelector = nodeData.inputs?.waitForSelector as string
-        const _omitMetadataKeys = nodeData.inputs?.omitMetadataKeys as string
-
-        let omitMetadataKeys: string[] = []
-        if (_omitMetadataKeys) {
-            omitMetadataKeys = _omitMetadataKeys.split(',').map((key) => key.trim())
-        }
 
         let url = nodeData.inputs?.url as string
         url = url.trim()
@@ -184,7 +164,7 @@ class Playwright_DocumentLoaders implements INode {
             }
         }
 
-        let docs: IDocument[] = []
+        let docs = []
         if (relativeLinksMethod) {
             if (process.env.DEBUG === 'true') options.logger.info(`Start ${relativeLinksMethod}`)
             // if limit is 0 we don't want it to default to 10 so we check explicitly for null or undefined
@@ -215,26 +195,18 @@ class Playwright_DocumentLoaders implements INode {
 
         if (metadata) {
             const parsedMetadata = typeof metadata === 'object' ? metadata : JSON.parse(metadata)
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
+            let finaldocs = []
+            for (const doc of docs) {
+                const newdoc = {
+                    ...doc,
+                    metadata: {
                         ...doc.metadata,
                         ...parsedMetadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
-        } else {
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
-                        ...doc.metadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
+                    }
+                }
+                finaldocs.push(newdoc)
+            }
+            return finaldocs
         }
 
         return docs

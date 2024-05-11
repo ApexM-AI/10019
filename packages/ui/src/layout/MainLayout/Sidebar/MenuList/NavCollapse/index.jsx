@@ -11,7 +11,7 @@ import NavItem from '../NavItem'
 
 // assets
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
-import { IconChevronDown, IconChevronUp } from '@tabler/icons-react'
+import { IconChevronDown, IconChevronUp } from '@tabler/icons'
 
 // ==============================|| SIDEBAR MENU LIST COLLAPSE ITEMS ||============================== //
 

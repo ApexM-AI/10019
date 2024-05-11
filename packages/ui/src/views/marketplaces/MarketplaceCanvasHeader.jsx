@@ -7,7 +7,7 @@ import { Avatar, Box, ButtonBase, Typography, Stack } from '@mui/material'
 import { StyledButton } from '@/ui-component/button/StyledButton'
 
 // icons
-import { IconCopy, IconChevronLeft } from '@tabler/icons-react'
+import { IconCopy, IconChevronLeft } from '@tabler/icons'
 
 // ==============================|| CANVAS HEADER ||============================== //
 

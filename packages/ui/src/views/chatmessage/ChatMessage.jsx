@@ -23,7 +23,7 @@ import {
     Typography
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { IconCircleDot, IconDownload, IconSend, IconMicrophone, IconPhotoPlus, IconTrash, IconX, IconTool } from '@tabler/icons-react'
+import { IconCircleDot, IconDownload, IconSend, IconMicrophone, IconPhotoPlus, IconTrash, IconX, IconTool } from '@tabler/icons'
 import robotPNG from '@/assets/images/robot.png'
 import userPNG from '@/assets/images/account.png'
 import audioUploadSVG from '@/assets/images/wave-sound.jpg'
@@ -47,7 +47,6 @@ import chatmessageApi from '@/api/chatmessage'
 import chatflowsApi from '@/api/chatflows'
 import predictionApi from '@/api/prediction'
 import chatmessagefeedbackApi from '@/api/chatmessagefeedback'
-import leadsApi from '@/api/lead'
 
 // Hooks
 import useApi from '@/hooks/useApi'
@@ -56,7 +55,7 @@ import useApi from '@/hooks/useApi'
 import { baseURL, maxScroll } from '@/store/constant'
 
 // Utils
-import { isValidURL, removeDuplicateURL, setLocalStorageChatflow, getLocalStorageChatflow } from '@/utils/genericHelper'
+import { isValidURL, removeDuplicateURL, setLocalStorageChatflow } from '@/utils/genericHelper'
 
 const messageImageStyle = {
     width: '128px',
@@ -92,19 +91,9 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
     const getChatflowConfig = useApi(chatflowsApi.getSpecificChatflow)
 
     const [starterPrompts, setStarterPrompts] = useState([])
-
-    // feedback
     const [chatFeedbackStatus, setChatFeedbackStatus] = useState(false)
     const [feedbackId, setFeedbackId] = useState('')
     const [showFeedbackContentDialog, setShowFeedbackContentDialog] = useState(false)
-
-    // leads
-    const [leadsConfig, setLeadsConfig] = useState(null)
-    const [leadName, setLeadName] = useState('')
-    const [leadEmail, setLeadEmail] = useState('')
-    const [leadPhone, setLeadPhone] = useState('')
-    const [isLeadSaving, setIsLeadSaving] = useState(false)
-    const [isLeadSaved, setIsLeadSaved] = useState(false)
 
     // drag & drop and file input
     const fileUploadRef = useRef(null)
@@ -252,13 +241,7 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
     }
 
     const addRecordingToPreviews = (blob) => {
-        let mimeType = ''
-        const pos = blob.type.indexOf(';')
-        if (pos === -1) {
-            mimeType = blob.type
-        } else {
-            mimeType = blob.type.substring(0, pos)
-        }
+        const mimeType = blob.type.substring(0, blob.type.indexOf(';'))
         // read blob and add to previews
         const reader = new FileReader()
         reader.readAsDataURL(blob)
@@ -268,7 +251,7 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                 data: base64data,
                 preview: audioUploadSVG,
                 type: 'audio',
-                name: `audio_${Date.now()}.wav`,
+                name: 'audio.wav',
                 mime: mimeType
             }
             setPreviews((prevPreviews) => [...prevPreviews, upload])
@@ -366,15 +349,6 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
         })
     }
 
-    const updateLastMessageFileAnnotations = (fileAnnotations) => {
-        setMessages((prevMessages) => {
-            let allMessages = [...cloneDeep(prevMessages)]
-            if (allMessages[allMessages.length - 1].type === 'userMessage') return allMessages
-            allMessages[allMessages.length - 1].fileAnnotations = fileAnnotations
-            return allMessages
-        })
-    }
-
     // Handle errors
     const handleError = (message = 'Oops! There seems to be an error. Please try again.') => {
         message = message.replace(`Unable to parse JSON response from chat agent.\n\n`, '')
@@ -425,7 +399,6 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                 chatId
             }
             if (urls && urls.length > 0) params.uploads = urls
-            if (leadEmail) params.leadEmail = leadEmail
             if (isChatFlowAvailableToStream) params.socketIOClientId = socketIOClientId
 
             const response = await predictionApi.sendMessageAndGetPrediction(chatflowid, params)
@@ -503,8 +476,8 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
     const downloadFile = async (fileAnnotation) => {
         try {
             const response = await axios.post(
-                `${baseURL}/api/v1/openai-assistants-file/download`,
-                { fileName: fileAnnotation.fileName, chatflowId: chatflowid, chatId: chatId },
+                `${baseURL}/api/v1/openai-assistants-file`,
+                { fileName: fileAnnotation.fileName },
                 { responseType: 'blob' }
             )
             const blob = new Blob([response.data], { type: response.headers['content-type'] })
@@ -585,20 +558,6 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                 if (config.chatFeedback) {
                     setChatFeedbackStatus(config.chatFeedback.status)
                 }
-
-                if (config.leads) {
-                    setLeadsConfig(config.leads)
-                    if (config.leads.status && !getLocalStorageChatflow(chatflowid).lead) {
-                        setMessages((prevMessages) => {
-                            const leadCaptureMessage = {
-                                message: '',
-                                type: 'leadCaptureMessage'
-                            }
-
-                            return [...prevMessages, leadCaptureMessage]
-                        })
-                    }
-                }
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -631,13 +590,6 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
 
             setIsRecording(false)
 
-            // leads
-            const savedLead = getLocalStorageChatflow(chatflowid)?.lead
-            if (savedLead) {
-                setIsLeadSaved(!!savedLead)
-                setLeadEmail(savedLead.email)
-            }
-
             // SocketIO
             socket = socketIOClient(baseURL)
 
@@ -652,8 +604,6 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
             socket.on('sourceDocuments', updateLastMessageSourceDocuments)
 
             socket.on('usedTools', updateLastMessageUsedTools)
-
-            socket.on('fileAnnotations', updateLastMessageFileAnnotations)
 
             socket.on('token', updateLastMessage)
         }
@@ -764,36 +714,6 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
         }
     }
 
-    const handleLeadCaptureSubmit = async (event) => {
-        if (event) event.preventDefault()
-        setIsLeadSaving(true)
-
-        const body = {
-            chatflowid,
-            chatId,
-            name: leadName,
-            email: leadEmail,
-            phone: leadPhone
-        }
-
-        const result = await leadsApi.addLead(body)
-        if (result.data) {
-            const data = result.data
-            if (!chatId) setChatId(data.chatId)
-            setLocalStorageChatflow(chatflowid, data.chatId, { lead: { name: leadName, email: leadEmail, phone: leadPhone } })
-            setIsLeadSaved(true)
-            setLeadEmail(leadEmail)
-            setMessages((prevMessages) => {
-                let allMessages = [...cloneDeep(prevMessages)]
-                if (allMessages[allMessages.length - 1].type !== 'leadCaptureMessage') return allMessages
-                allMessages[allMessages.length - 1].message =
-                    leadsConfig.successMessage || 'Thank you for submitting your contact information.'
-                return allMessages
-            })
-        }
-        setIsLeadSaving(false)
-    }
-
     return (
         <div onDragEnter={handleDrag}>
             {isDragActive && (
@@ -826,10 +746,7 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                 // The latest message sent by the user will be animated while waiting for a response
                                 <Box
                                     sx={{
-                                        background:
-                                            message.type === 'apiMessage' || message.type === 'leadCaptureMessage'
-                                                ? theme.palette.asyncSelect.main
-                                                : ''
+                                        background: message.type === 'apiMessage' ? theme.palette.asyncSelect.main : ''
                                     }}
                                     key={index}
                                     style={{ display: 'flex' }}
@@ -844,26 +761,14 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                     }
                                 >
                                     {/* Display the correct icon depending on the message type */}
-                                    {message.type === 'apiMessage' || message.type === 'leadCaptureMessage' ? (
+                                    {message.type === 'apiMessage' ? (
                                         <img src={robotPNG} alt='AI' width='30' height='30' className='boticon' />
                                     ) : (
                                         <img src={userPNG} alt='Me' width='30' height='30' className='usericon' />
                                     )}
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            width: '100%'
-                                        }}
-                                    >
+                                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                                         {message.usedTools && (
-                                            <div
-                                                style={{
-                                                    display: 'block',
-                                                    flexDirection: 'row',
-                                                    width: '100%'
-                                                }}
-                                            >
+                                            <div style={{ display: 'block', flexDirection: 'row', width: '100%' }}>
                                                 {message.usedTools.map((tool, index) => {
                                                     return (
                                                         <Chip
@@ -894,7 +799,7 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                                 {message.fileUploads.map((item, index) => {
                                                     return (
                                                         <>
-                                                            {item?.mime?.startsWith('image/') ? (
+                                                            {item.mime.startsWith('image/') ? (
                                                                 <Card
                                                                     key={index}
                                                                     sx={{
@@ -926,122 +831,36 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                             </div>
                                         )}
                                         <div className='markdownanswer'>
-                                            {message.type === 'leadCaptureMessage' &&
-                                            !getLocalStorageChatflow(chatflowid)?.lead &&
-                                            leadsConfig.status ? (
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        gap: 2,
-                                                        marginTop: 2
-                                                    }}
-                                                >
-                                                    <Typography sx={{ lineHeight: '1.5rem', whiteSpace: 'pre-line' }}>
-                                                        {leadsConfig.title || 'Let us know where we can reach you:'}
-                                                    </Typography>
-                                                    <form
-                                                        style={{
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            gap: '8px',
-                                                            width: isDialog ? '50%' : '100%'
-                                                        }}
-                                                        onSubmit={handleLeadCaptureSubmit}
-                                                    >
-                                                        {leadsConfig.name && (
-                                                            <OutlinedInput
-                                                                id='leadName'
-                                                                type='text'
-                                                                fullWidth
-                                                                placeholder='Name'
-                                                                name='leadName'
-                                                                value={leadName}
-                                                                // eslint-disable-next-line
-                                                                autoFocus={true}
-                                                                onChange={(e) => setLeadName(e.target.value)}
+                                            {/* Messages are being rendered in Markdown format */}
+                                            <MemoizedReactMarkdown
+                                                remarkPlugins={[remarkGfm, remarkMath]}
+                                                rehypePlugins={[rehypeMathjax, rehypeRaw]}
+                                                components={{
+                                                    code({ inline, className, children, ...props }) {
+                                                        const match = /language-(\w+)/.exec(className || '')
+                                                        return !inline ? (
+                                                            <CodeBlock
+                                                                key={Math.random()}
+                                                                chatflowid={chatflowid}
+                                                                isDialog={isDialog}
+                                                                language={(match && match[1]) || ''}
+                                                                value={String(children).replace(/\n$/, '')}
+                                                                {...props}
                                                             />
-                                                        )}
-                                                        {leadsConfig.email && (
-                                                            <OutlinedInput
-                                                                id='leadEmail'
-                                                                type='email'
-                                                                fullWidth
-                                                                placeholder='Email Address'
-                                                                name='leadEmail'
-                                                                value={leadEmail}
-                                                                onChange={(e) => setLeadEmail(e.target.value)}
-                                                            />
-                                                        )}
-                                                        {leadsConfig.phone && (
-                                                            <OutlinedInput
-                                                                id='leadPhone'
-                                                                type='number'
-                                                                fullWidth
-                                                                placeholder='Phone Number'
-                                                                name='leadPhone'
-                                                                value={leadPhone}
-                                                                onChange={(e) => setLeadPhone(e.target.value)}
-                                                            />
-                                                        )}
-                                                        <Box
-                                                            sx={{
-                                                                display: 'flex',
-                                                                alignItems: 'center'
-                                                            }}
-                                                        >
-                                                            <Button
-                                                                variant='outlined'
-                                                                fullWidth
-                                                                type='submit'
-                                                                sx={{ borderRadius: '20px' }}
-                                                            >
-                                                                {isLeadSaving ? 'Saving...' : 'Save'}
-                                                            </Button>
-                                                        </Box>
-                                                    </form>
-                                                </Box>
-                                            ) : (
-                                                <>
-                                                    {/* Messages are being rendered in Markdown format */}
-                                                    <MemoizedReactMarkdown
-                                                        remarkPlugins={[remarkGfm, remarkMath]}
-                                                        rehypePlugins={[rehypeMathjax, rehypeRaw]}
-                                                        components={{
-                                                            code({ inline, className, children, ...props }) {
-                                                                const match = /language-(\w+)/.exec(className || '')
-                                                                return !inline ? (
-                                                                    <CodeBlock
-                                                                        key={Math.random()}
-                                                                        chatflowid={chatflowid}
-                                                                        isDialog={isDialog}
-                                                                        language={(match && match[1]) || ''}
-                                                                        value={String(children).replace(/\n$/, '')}
-                                                                        {...props}
-                                                                    />
-                                                                ) : (
-                                                                    <code className={className} {...props}>
-                                                                        {children}
-                                                                    </code>
-                                                                )
-                                                            }
-                                                        }}
-                                                    >
-                                                        {message.message}
-                                                    </MemoizedReactMarkdown>
-                                                </>
-                                            )}
+                                                        ) : (
+                                                            <code className={className} {...props}>
+                                                                {children}
+                                                            </code>
+                                                        )
+                                                    }
+                                                }}
+                                            >
+                                                {message.message}
+                                            </MemoizedReactMarkdown>
                                         </div>
                                         {message.type === 'apiMessage' && message.id && chatFeedbackStatus ? (
                                             <>
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'start',
-                                                        gap: 1
-                                                    }}
-                                                >
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'start', gap: 1 }}>
                                                     <CopyToClipboardButton onClick={() => copyMessageToClipboard(message.message)} />
                                                     {!message.feedback ||
                                                     message.feedback.rating === '' ||
@@ -1065,21 +884,11 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                             </>
                                         ) : null}
                                         {message.fileAnnotations && (
-                                            <div
-                                                style={{
-                                                    display: 'block',
-                                                    flexDirection: 'row',
-                                                    width: '100%'
-                                                }}
-                                            >
+                                            <div style={{ display: 'block', flexDirection: 'row', width: '100%' }}>
                                                 {message.fileAnnotations.map((fileAnnotation, index) => {
                                                     return (
                                                         <Button
-                                                            sx={{
-                                                                fontSize: '0.85rem',
-                                                                textTransform: 'none',
-                                                                mb: 1
-                                                            }}
+                                                            sx={{ fontSize: '0.85rem', textTransform: 'none', mb: 1 }}
                                                             key={index}
                                                             variant='outlined'
                                                             onClick={() => downloadFile(fileAnnotation)}
@@ -1092,13 +901,7 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                             </div>
                                         )}
                                         {message.sourceDocuments && (
-                                            <div
-                                                style={{
-                                                    display: 'block',
-                                                    flexDirection: 'row',
-                                                    width: '100%'
-                                                }}
-                                            >
+                                            <div style={{ display: 'block', flexDirection: 'row', width: '100%' }}>
                                                 {removeDuplicateURL(message).map((source, index) => {
                                                     const URL =
                                                         source.metadata && source.metadata.source
@@ -1256,7 +1059,7 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                             // eslint-disable-next-line
                             autoFocus
                             sx={{ width: '100%' }}
-                            disabled={loading || !chatflowid || (leadsConfig?.status && !isLeadSaved)}
+                            disabled={loading || !chatflowid}
                             onKeyDown={handleEnter}
                             id='userInput'
                             name='userInput'
@@ -1271,17 +1074,11 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                         <IconButton
                                             onClick={handleUploadClick}
                                             type='button'
-                                            disabled={loading || !chatflowid || (leadsConfig?.status && !isLeadSaved)}
+                                            disabled={loading || !chatflowid}
                                             edge='start'
                                         >
                                             <IconPhotoPlus
-                                                color={
-                                                    loading || !chatflowid || (leadsConfig?.status && !isLeadSaved)
-                                                        ? '#9e9e9e'
-                                                        : customization.isDarkMode
-                                                        ? 'white'
-                                                        : '#1e88e5'
-                                                }
+                                                color={loading || !chatflowid ? '#9e9e9e' : customization.isDarkMode ? 'white' : '#1e88e5'}
                                             />
                                         </IconButton>
                                     </InputAdornment>
@@ -1294,28 +1091,20 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                             <IconButton
                                                 onClick={() => onMicrophonePressed()}
                                                 type='button'
-                                                disabled={loading || !chatflowid || (leadsConfig?.status && !isLeadSaved)}
+                                                disabled={loading || !chatflowid}
                                                 edge='end'
                                             >
                                                 <IconMicrophone
                                                     className={'start-recording-button'}
                                                     color={
-                                                        loading || !chatflowid || (leadsConfig?.status && !isLeadSaved)
-                                                            ? '#9e9e9e'
-                                                            : customization.isDarkMode
-                                                            ? 'white'
-                                                            : '#1e88e5'
+                                                        loading || !chatflowid ? '#9e9e9e' : customization.isDarkMode ? 'white' : '#1e88e5'
                                                     }
                                                 />
                                             </IconButton>
                                         </InputAdornment>
                                     )}
                                     <InputAdornment position='end' sx={{ padding: '15px' }}>
-                                        <IconButton
-                                            type='submit'
-                                            disabled={loading || !chatflowid || (leadsConfig?.status && !isLeadSaved)}
-                                            edge='end'
-                                        >
+                                        <IconButton type='submit' disabled={loading || !chatflowid} edge='end'>
                                             {loading ? (
                                                 <div>
                                                     <CircularProgress color='inherit' size={20} />
@@ -1324,11 +1113,7 @@ export const ChatMessage = ({ open, chatflowid, isDialog, previews, setPreviews 
                                                 // Send icon SVG in input field
                                                 <IconSend
                                                     color={
-                                                        loading || !chatflowid || (leadsConfig?.status && !isLeadSaved)
-                                                            ? '#9e9e9e'
-                                                            : customization.isDarkMode
-                                                            ? 'white'
-                                                            : '#1e88e5'
+                                                        loading || !chatflowid ? '#9e9e9e' : customization.isDarkMode ? 'white' : '#1e88e5'
                                                     }
                                                 />
                                             )}

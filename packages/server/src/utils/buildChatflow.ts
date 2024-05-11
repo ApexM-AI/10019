@@ -1,7 +1,8 @@
 import { Request } from 'express'
-import { IFileUpload, convertSpeechToText, ICommonObject, addFileToStorage } from 'flowise-components'
+import { IFileUpload, getStoragePath, convertSpeechToText, ICommonObject } from 'flowise-components'
 import { StatusCodes } from 'http-status-codes'
 import { IncomingInput, IMessage, INodeData, IReactFlowObject, IReactFlowNode, IDepthQueue, chatType, IChatMessage } from '../Interface'
+import path from 'path'
 import { InternalFlowiseError } from '../errors/internalFlowiseError'
 import { ChatFlow } from '../database/entities/ChatFlow'
 import { Server } from 'socket.io'
@@ -65,20 +66,24 @@ export const utilBuildChatflow = async (req: Request, socketIO?: Server, isInter
             fileUploads = incomingInput.uploads
             for (let i = 0; i < fileUploads.length; i += 1) {
                 const upload = fileUploads[i]
-
                 if ((upload.type === 'file' || upload.type === 'audio') && upload.data) {
                     const filename = upload.name
+                    const dir = path.join(getStoragePath(), chatflowid, chatId)
+                    if (!fs.existsSync(dir)) {
+                        fs.mkdirSync(dir, { recursive: true })
+                    }
+                    const filePath = path.join(dir, filename)
                     const splitDataURI = upload.data.split(',')
                     const bf = Buffer.from(splitDataURI.pop() || '', 'base64')
-                    const mime = splitDataURI[0].split(':')[1].split(';')[0]
-                    await addFileToStorage(mime, bf, filename, chatflowid, chatId)
-                    upload.type = 'stored-file'
+                    fs.writeFileSync(filePath, bf)
+
                     // Omit upload.data since we don't store the content in database
+                    upload.type = 'stored-file'
                     fileUploads[i] = omit(upload, ['data'])
                 }
 
                 // Run Speech to Text conversion
-                if (upload.mime === 'audio/webm' || upload.mime === 'audio/mp4') {
+                if (upload.mime === 'audio/webm') {
                     let speechToTextConfig: ICommonObject = {}
                     if (chatflow.speechToText) {
                         const speechToTextProviders = JSON.parse(chatflow.speechToText)
@@ -173,35 +178,50 @@ export const utilBuildChatflow = async (req: Request, socketIO?: Server, isInter
             /*** Get Ending Node with Directed Graph  ***/
             const { graph, nodeDependencies } = constructGraphs(nodes, edges)
             const directedGraph = graph
+            const endingNodeIds = getEndingNodes(nodeDependencies, directedGraph)
+            if (!endingNodeIds.length) {
+                throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Ending nodes not found`)
+            }
 
-            const endingNodes = getEndingNodes(nodeDependencies, directedGraph, nodes)
+            const endingNodes = nodes.filter((nd) => endingNodeIds.includes(nd.id))
 
-            let isCustomFunctionEndingNode = endingNodes.some((node) => node.data?.outputs?.output === 'EndingNode')
+            let isEndingNodeExists = endingNodes.find((node) => node.data?.outputs?.output === 'EndingNode')
 
             for (const endingNode of endingNodes) {
                 const endingNodeData = endingNode.data
+                if (!endingNodeData) {
+                    throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Ending node ${endingNode.id} data not found`)
+                }
 
                 const isEndingNode = endingNodeData?.outputs?.output === 'EndingNode'
 
-                // Once custom function ending node exists, no need to do follow-up checks.
-                if (isEndingNode) continue
+                if (!isEndingNode) {
+                    if (
+                        endingNodeData &&
+                        endingNodeData.category !== 'Chains' &&
+                        endingNodeData.category !== 'Agents' &&
+                        endingNodeData.category !== 'Engine'
+                    ) {
+                        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Ending node must be either a Chain or Agent`)
+                    }
 
-                if (
-                    endingNodeData.outputs &&
-                    Object.keys(endingNodeData.outputs).length &&
-                    !Object.values(endingNodeData.outputs ?? {}).includes(endingNodeData.name)
-                ) {
-                    throw new InternalFlowiseError(
-                        StatusCodes.INTERNAL_SERVER_ERROR,
-                        `Output of ${endingNodeData.label} (${endingNodeData.id}) must be ${endingNodeData.label}, can't be an Output Prediction`
-                    )
+                    if (
+                        endingNodeData.outputs &&
+                        Object.keys(endingNodeData.outputs).length &&
+                        !Object.values(endingNodeData.outputs ?? {}).includes(endingNodeData.name)
+                    ) {
+                        throw new InternalFlowiseError(
+                            StatusCodes.INTERNAL_SERVER_ERROR,
+                            `Output of ${endingNodeData.label} (${endingNodeData.id}) must be ${endingNodeData.label}, can't be an Output Prediction`
+                        )
+                    }
                 }
 
                 isStreamValid = isFlowValidForStream(nodes, endingNodeData)
             }
 
             // Once custom function ending node exists, flow is always unavailable to stream
-            isStreamValid = isCustomFunctionEndingNode ? false : isStreamValid
+            isStreamValid = isEndingNodeExists ? false : isStreamValid
 
             let chatHistory: IMessage[] = []
 
@@ -232,7 +252,6 @@ export const utilBuildChatflow = async (req: Request, socketIO?: Server, isInter
             const nonDirectedGraph = constructedObj.graph
             let startingNodeIds: string[] = []
             let depthQueue: IDepthQueue = {}
-            const endingNodeIds = endingNodes.map((n) => n.id)
             for (const endingNodeId of endingNodeIds) {
                 const resx = getStartingNodes(nonDirectedGraph, endingNodeId)
                 startingNodeIds.push(...resx.startingNodeIds)
@@ -325,8 +344,7 @@ export const utilBuildChatflow = async (req: Request, socketIO?: Server, isInter
             memoryType,
             sessionId,
             createdDate: userMessageDateTime,
-            fileUploads: incomingInput.uploads ? JSON.stringify(fileUploads) : undefined,
-            leadEmail: incomingInput.leadEmail
+            fileUploads: incomingInput.uploads ? JSON.stringify(fileUploads) : undefined
         }
         await utilAddChatMessage(userMessage)
 

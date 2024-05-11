@@ -187,9 +187,6 @@ class Chroma_VectorStores implements INode {
             return retriever
         } else if (output === 'vectorStore') {
             ;(vectorStore as any).k = k
-            if (chromaMetadataFilter) {
-                ;(vectorStore as any).filter = obj.filter
-            }
             return vectorStore
         }
         return vectorStore

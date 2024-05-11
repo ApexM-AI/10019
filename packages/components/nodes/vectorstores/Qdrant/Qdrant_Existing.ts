@@ -182,9 +182,6 @@ class Qdrant_Existing_VectorStores implements INode {
             return retriever
         } else if (output === 'vectorStore') {
             ;(vectorStore as any).k = k
-            if (queryFilter) {
-                ;(vectorStore as any).filter = retrieverConfig.filter
-            }
             return vectorStore
         }
         return vectorStore

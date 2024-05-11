@@ -18,7 +18,7 @@ const StyledPopper = styled(Popper)({
     }
 })
 
-export const Dropdown = ({ name, value, loading, options, onSelect, disabled = false, disableClearable = false }) => {
+export const Dropdown = ({ name, value, options, onSelect, disabled = false, disableClearable = false }) => {
     const customization = useSelector((state) => state.customization)
     const findMatchingOptions = (options = [], value) => options.find((option) => option.name === value)
     const getDefaultOptionValue = () => ''
@@ -31,7 +31,6 @@ export const Dropdown = ({ name, value, loading, options, onSelect, disabled = f
                 disabled={disabled}
                 disableClearable={disableClearable}
                 size='small'
-                loading={loading}
                 options={options || []}
                 value={findMatchingOptions(options, internalValue) || getDefaultOptionValue()}
                 onChange={(e, selection) => {
@@ -62,7 +61,6 @@ export const Dropdown = ({ name, value, loading, options, onSelect, disabled = f
 Dropdown.propTypes = {
     name: PropTypes.string,
     value: PropTypes.string,
-    loading: PropTypes.bool,
     options: PropTypes.array,
     onSelect: PropTypes.func,
     disabled: PropTypes.bool,

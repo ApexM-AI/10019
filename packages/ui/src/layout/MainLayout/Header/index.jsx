@@ -13,7 +13,7 @@ import LogoSection from '../LogoSection'
 import ProfileSection from './ProfileSection'
 
 // assets
-import { IconMenu2 } from '@tabler/icons-react'
+import { IconMenu2 } from '@tabler/icons'
 
 // store
 import { SET_DARKMODE } from '@/store/actions'

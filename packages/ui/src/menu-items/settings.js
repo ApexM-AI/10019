@@ -6,9 +6,8 @@ import {
     IconCopy,
     IconMessage,
     IconDatabaseExport,
-    IconAdjustmentsHorizontal,
-    IconUsers
-} from '@tabler/icons-react'
+    IconAdjustmentsHorizontal
+} from '@tabler/icons'
 
 // constant
 const icons = {
@@ -18,8 +17,7 @@ const icons = {
     IconCopy,
     IconMessage,
     IconDatabaseExport,
-    IconAdjustmentsHorizontal,
-    IconUsers
+    IconAdjustmentsHorizontal
 }
 
 // ==============================|| SETTINGS MENU ITEMS ||============================== //
@@ -35,13 +33,6 @@ const settings = {
             type: 'item',
             url: '',
             icon: icons.IconMessage
-        },
-        {
-            id: 'viewLeads',
-            title: 'View Leads',
-            type: 'item',
-            url: '',
-            icon: icons.IconUsers
         },
         {
             id: 'viewUpsertHistory',

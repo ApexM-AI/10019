@@ -1,8 +1,10 @@
-import { omit } from 'lodash'
-import { ICommonObject, IDocument, INode, INodeData, INodeOutputsValue, INodeParams } from '../../../src/Interface'
+import { ICommonObject, INode, INodeData, INodeOutputsValue, INodeParams } from '../../../src/Interface'
 import { TextSplitter } from 'langchain/text_splitter'
 import { TextLoader } from 'langchain/document_loaders/fs/text'
-import { getFileFromStorage, handleEscapeCharacters } from '../../../src'
+import { Document } from '@langchain/core/documents'
+import { getStoragePath, handleEscapeCharacters } from '../../../src'
+import fs from 'fs'
+import path from 'path'
 
 class Text_DocumentLoaders implements INode {
     label: string
@@ -40,21 +42,9 @@ class Text_DocumentLoaders implements INode {
                 optional: true
             },
             {
-                label: 'Additional Metadata',
+                label: 'Metadata',
                 name: 'metadata',
                 type: 'json',
-                description: 'Additional metadata to be added to the extracted documents',
-                optional: true,
-                additionalParams: true
-            },
-            {
-                label: 'Omit Metadata Keys',
-                name: 'omitMetadataKeys',
-                type: 'string',
-                rows: 4,
-                description:
-                    'Each document loader comes with a default set of metadata keys that are extracted from the document. You can use this field to omit some of the default metadata keys. The value should be a list of keys, seperated by comma',
-                placeholder: 'key1, key2, key3.nestedKey1',
                 optional: true,
                 additionalParams: true
             }
@@ -80,14 +70,8 @@ class Text_DocumentLoaders implements INode {
         const txtFileBase64 = nodeData.inputs?.txtFile as string
         const metadata = nodeData.inputs?.metadata
         const output = nodeData.outputs?.output as string
-        const _omitMetadataKeys = nodeData.inputs?.omitMetadataKeys as string
 
-        let omitMetadataKeys: string[] = []
-        if (_omitMetadataKeys) {
-            omitMetadataKeys = _omitMetadataKeys.split(',').map((key) => key.trim())
-        }
-
-        let docs: IDocument[] = []
+        let alldocs = []
         let files: string[] = []
 
         //FILE-STORAGE::["CONTRIBUTING.md","LICENSE.md","README.md"]
@@ -101,14 +85,17 @@ class Text_DocumentLoaders implements INode {
             const chatflowid = options.chatflowid
 
             for (const file of files) {
-                const fileData = await getFileFromStorage(file, chatflowid)
+                const fileInStorage = path.join(getStoragePath(), chatflowid, file)
+                const fileData = fs.readFileSync(fileInStorage)
                 const blob = new Blob([fileData])
                 const loader = new TextLoader(blob)
 
                 if (textSplitter) {
-                    docs.push(...(await loader.loadAndSplit(textSplitter)))
+                    const docs = await loader.loadAndSplit(textSplitter)
+                    alldocs.push(...docs)
                 } else {
-                    docs.push(...(await loader.load()))
+                    const docs = await loader.load()
+                    alldocs.push(...docs)
                 }
             }
         } else {
@@ -126,42 +113,37 @@ class Text_DocumentLoaders implements INode {
                 const loader = new TextLoader(blob)
 
                 if (textSplitter) {
-                    docs.push(...(await loader.loadAndSplit(textSplitter)))
+                    const docs = await loader.loadAndSplit(textSplitter)
+                    alldocs.push(...docs)
                 } else {
-                    docs.push(...(await loader.load()))
+                    const docs = await loader.load()
+                    alldocs.push(...docs)
                 }
             }
         }
 
+        let finaldocs: Document<Record<string, any>>[] = []
         if (metadata) {
             const parsedMetadata = typeof metadata === 'object' ? metadata : JSON.parse(metadata)
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
+            for (const doc of alldocs) {
+                const newdoc = {
+                    ...doc,
+                    metadata: {
                         ...doc.metadata,
                         ...parsedMetadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
+                    }
+                }
+                finaldocs.push(newdoc)
+            }
         } else {
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
-                        ...doc.metadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
+            finaldocs = alldocs
         }
 
         if (output === 'document') {
-            return docs
+            return finaldocs
         } else {
             let finaltext = ''
-            for (const doc of docs) {
+            for (const doc of finaldocs) {
                 finaltext += `${doc.pageContent}\n`
             }
             return handleEscapeCharacters(finaltext, false)

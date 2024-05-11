@@ -199,9 +199,6 @@ class Milvus_VectorStores implements INode {
             return retriever
         } else if (output === 'vectorStore') {
             ;(vectorStore as any).k = k
-            if (milvusFilter) {
-                ;(vectorStore as any).filter = milvusFilter
-            }
             return vectorStore
         }
         return vectorStore

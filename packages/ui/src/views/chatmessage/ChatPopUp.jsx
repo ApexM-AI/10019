@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 
 import { ClickAwayListener, Paper, Popper, Button } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { IconMessage, IconX, IconEraser, IconArrowsMaximize } from '@tabler/icons-react'
+import { IconMessage, IconX, IconEraser, IconArrowsMaximize } from '@tabler/icons'
 
 // project import
 import { StyledFab } from '@/ui-component/button/StyledFab'
@@ -22,9 +22,6 @@ import useNotifier from '@/utils/useNotifier'
 
 // Const
 import { enqueueSnackbar as enqueueSnackbarAction, closeSnackbar as closeSnackbarAction } from '@/store/actions'
-
-// Utils
-import { getLocalStorageChatflow, removeLocalStorageChatHistory } from '@/utils/genericHelper'
 
 export const ChatPopUp = ({ chatflowid }) => {
     const theme = useTheme()
@@ -89,10 +86,11 @@ export const ChatPopUp = ({ chatflowid }) => {
 
         if (isConfirmed) {
             try {
-                const objChatDetails = getLocalStorageChatflow(chatflowid)
-                if (!objChatDetails.chatId) return
+                const chatDetails = localStorage.getItem(`${chatflowid}_INTERNAL`)
+                if (!chatDetails) return
+                const objChatDetails = JSON.parse(chatDetails)
                 await chatmessageApi.deleteChatmessage(chatflowid, { chatId: objChatDetails.chatId, chatType: 'INTERNAL' })
-                removeLocalStorageChatHistory(chatflowid)
+                localStorage.removeItem(`${chatflowid}_INTERNAL`)
                 resetChatDialog()
                 enqueueSnackbar({
                     message: 'Succesfully cleared all chat history',

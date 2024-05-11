@@ -1,4 +1,3 @@
-import { omit } from 'lodash'
 import { ICommonObject, INode, INodeData, INodeParams } from '../../../src/Interface'
 import { TextSplitter } from 'langchain/text_splitter'
 import { SearchApiLoader } from 'langchain/document_loaders/web/searchapi'
@@ -55,21 +54,9 @@ class SearchAPI_DocumentLoaders implements INode {
                 optional: true
             },
             {
-                label: 'Additional Metadata',
+                label: 'Metadata',
                 name: 'metadata',
                 type: 'json',
-                description: 'Additional metadata to be added to the extracted documents',
-                optional: true,
-                additionalParams: true
-            },
-            {
-                label: 'Omit Metadata Keys',
-                name: 'omitMetadataKeys',
-                type: 'string',
-                rows: 4,
-                description:
-                    'Each document loader comes with a default set of metadata keys that are extracted from the document. You can use this field to omit some of the default metadata keys. The value should be a list of keys, seperated by comma',
-                placeholder: 'key1, key2, key3.nestedKey1',
                 optional: true,
                 additionalParams: true
             }
@@ -81,12 +68,6 @@ class SearchAPI_DocumentLoaders implements INode {
         const query = nodeData.inputs?.query as string
         const customParameters = nodeData.inputs?.customParameters
         const metadata = nodeData.inputs?.metadata
-        const _omitMetadataKeys = nodeData.inputs?.omitMetadataKeys as string
-
-        let omitMetadataKeys: string[] = []
-        if (_omitMetadataKeys) {
-            omitMetadataKeys = _omitMetadataKeys.split(',').map((key) => key.trim())
-        }
 
         // Fetch the API credentials for this node
         const credentialData = await getCredentialData(nodeData.credential ?? '', options)
@@ -106,30 +87,19 @@ class SearchAPI_DocumentLoaders implements INode {
         const loader = new SearchApiLoader(loaderConfig)
 
         // Fetch documents, split if a text splitter is provided
-        let docs = textSplitter ? await loader.loadAndSplit() : await loader.load()
+        const docs = textSplitter ? await loader.loadAndSplit() : await loader.load()
 
         if (metadata) {
             const parsedMetadata = typeof metadata === 'object' ? metadata : JSON.parse(metadata)
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
+            return docs.map((doc) => {
+                return {
+                    ...doc,
+                    metadata: {
                         ...doc.metadata,
                         ...parsedMetadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
-        } else {
-            docs = docs.map((doc) => ({
-                ...doc,
-                metadata: omit(
-                    {
-                        ...doc.metadata
-                    },
-                    omitMetadataKeys
-                )
-            }))
+                    }
+                }
+            })
         }
 
         return docs

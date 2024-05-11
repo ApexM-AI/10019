@@ -3,6 +3,6 @@ import getUploadFileController from '../../controllers/get-upload-file'
 const router = express.Router()
 
 // READ
-router.get('/', getUploadFileController.streamUploadedFile)
+router.get('/', getUploadFileController.streamUploadedImage)
 
 export default router

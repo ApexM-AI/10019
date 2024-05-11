@@ -1,18 +1,10 @@
 import { INodeData } from '../../src'
-import { VectorStore } from '@langchain/core/vectorstores'
 
-export const resolveVectorStoreOrRetriever = (
-    nodeData: INodeData,
-    vectorStore: VectorStore,
-    metadataFilter?: string | object | undefined
-) => {
+export const resolveVectorStoreOrRetriever = (nodeData: INodeData, vectorStore: any) => {
     const output = nodeData.outputs?.output as string
     const searchType = nodeData.outputs?.searchType as string
     const topK = nodeData.inputs?.topK as string
     const k = topK ? parseFloat(topK) : 4
-
-    // If it is already pre-defined in lc_kwargs, then don't pass it again
-    const filter = vectorStore?.lc_kwargs?.filter ? undefined : metadataFilter
 
     if (output === 'retriever') {
         if ('mmr' === searchType) {
@@ -23,7 +15,6 @@ export const resolveVectorStoreOrRetriever = (
             return vectorStore.asRetriever({
                 searchType: 'mmr',
                 k: k,
-                filter,
                 searchKwargs: {
                     fetchK: f,
                     lambda: l
@@ -31,11 +22,10 @@ export const resolveVectorStoreOrRetriever = (
             })
         } else {
             // "searchType" is "similarity"
-            return vectorStore.asRetriever(k, filter)
+            return vectorStore.asRetriever(k)
         }
     } else if (output === 'vectorStore') {
         ;(vectorStore as any).k = k
-        ;(vectorStore as any).filter = filter
         return vectorStore
     }
 }

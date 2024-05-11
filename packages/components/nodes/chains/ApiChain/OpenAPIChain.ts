@@ -5,7 +5,9 @@ import { getBaseClasses } from '../../../src/utils'
 import { ConsoleCallbackHandler, CustomChainHandler, additionalCallbacks } from '../../../src/handler'
 import { checkInputs, Moderation, streamResponse } from '../../moderation/Moderation'
 import { formatResponse } from '../../outputparsers/OutputParserHelpers'
-import { getFileFromStorage } from '../../../src'
+import { getStoragePath } from '../../../src'
+import fs from 'fs'
+import path from 'path'
 
 class OpenApiChain_Chains implements INode {
     label: string
@@ -109,7 +111,8 @@ const initChain = async (nodeData: INodeData, options: ICommonObject) => {
         if (yamlFileBase64.startsWith('FILE-STORAGE::')) {
             const file = yamlFileBase64.replace('FILE-STORAGE::', '')
             const chatflowid = options.chatflowid
-            const fileData = await getFileFromStorage(file, chatflowid)
+            const fileInStorage = path.join(getStoragePath(), chatflowid, file)
+            const fileData = fs.readFileSync(fileInStorage)
             yamlString = fileData.toString()
         } else {
             const splitDataURI = yamlFileBase64.split(',')
