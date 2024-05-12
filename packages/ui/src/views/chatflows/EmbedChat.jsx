@@ -40,7 +40,7 @@ function a11yProps(index) {
 
 const embedPopupHtmlCode = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -61,7 +61,7 @@ const App = () => {
 const embedFullpageHtmlCode = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -105,7 +105,7 @@ const buttonConfig = (isReact = false) => {
 const chatwindowConfig = (isReact = false) => {
     return isReact
         ? `chatWindow: {
-                    welcomeMessage: "Hello! This is custom welcome message",
+                    welcomeMessage: "Hello! How can I assist you today?",
                     backgroundColor: "#ffffff",
                     height: 700,
                     width: 400,
@@ -115,13 +115,13 @@ const chatwindowConfig = (isReact = false) => {
                         backgroundColor: "#f7f8ff",
                         textColor: "#303235",
                         showAvatar: true,
-                        avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
+                        avatarSrc: "https://i.imgur.com/x1owD1b.png",
                     },
                     userMessage: {
                         backgroundColor: "#3B81F6",
                         textColor: "#ffffff",
                         showAvatar: true,
-                        avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
+                        avatarSrc: "https://i.imgur.com/iQ3PGBR.png",
                     },
                     textInput: {
                         placeholder: "Type your question",
@@ -131,7 +131,7 @@ const chatwindowConfig = (isReact = false) => {
                     }
                 }`
         : `chatWindow: {
-                welcomeMessage: "Hello! This is custom welcome message",
+                welcomeMessage: "Hello! How can I assist you today?",
                 backgroundColor: "#ffffff",
                 height: 700,
                 width: 400,
@@ -141,13 +141,13 @@ const chatwindowConfig = (isReact = false) => {
                     backgroundColor: "#f7f8ff",
                     textColor: "#303235",
                     showAvatar: true,
-                    avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
+                    avatarSrc: "https://i.imgur.com/x1owD1b.png",
                 },
                 userMessage: {
                     backgroundColor: "#3B81F6",
                     textColor: "#ffffff",
                     showAvatar: true,
-                    avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
+                    avatarSrc: "https://i.imgur.com/iQ3PGBR.png",
                 },
                 textInput: {
                     placeholder: "Type your question",
@@ -160,7 +160,7 @@ const chatwindowConfig = (isReact = false) => {
 
 const embedPopupHtmlCodeCustomization = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -195,7 +195,7 @@ const App = () => {
 const embedFullpageHtmlCodeCustomization = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -288,11 +288,11 @@ const EmbedChat = ({ chatflowid }) => {
                                     <a
                                         rel='noreferrer'
                                         target='_blank'
-                                        href='https://www.npmjs.com/package/aritellavsn/ApexMchat?activeTab=versions'
+                                        href='https://www.npmjs.com/package/ApexM-AI/devinai?activeTab=versions'
                                     >
                                         version
                                     </a>
-                                    :&nbsp;<code>{`https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat@<version>/dist/web.js`}</code>
+                                    :&nbsp;<code>{`https://cdn.jsdelivr.net/gh/ApexM-AI/devinai@<version>/dist/web.js`}</code>
                                 </p>
                             </span>
                             <div style={{ height: 10 }}></div>
