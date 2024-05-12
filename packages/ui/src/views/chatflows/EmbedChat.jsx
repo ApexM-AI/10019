@@ -223,7 +223,7 @@ const App = () => {
 }
 
 const EmbedChat = ({ chatflowid }) => {
-    const codes = ['Popup Html', 'Fullpage Html', 'Popup React', 'Fullpage React']
+    const codes = ['Popup Html', /*'Fullpage Html', 'Popup React', 'Fullpage React'*/]
     const [value, setValue] = useState(0)
     const [embedChatCheckboxVal, setEmbedChatCheckbox] = useState(false)
 
@@ -283,7 +283,7 @@ const EmbedChat = ({ chatflowid }) => {
                         <>
                             <span>
                                 Paste this anywhere in the <code>{`<body>`}</code> tag of your html file.
-                                <p>
+                                {/*<p>
                                     You can also specify a&nbsp;
                                     <a
                                         rel='noreferrer'
@@ -293,14 +293,14 @@ const EmbedChat = ({ chatflowid }) => {
                                         version
                                     </a>
                                     :&nbsp;<code>{`https://cdn.jsdelivr.net/gh/ApexM-AI/devinai@<version>/dist/web.js`}</code>
-                                </p>
+                    </p>*/}
                             </span>
                             <div style={{ height: 10 }}></div>
                         </>
                     )}
                     <CopyBlock theme={atomOneDark} text={getCode(codeLang)} language='javascript' showLineNumbers={false} wrapLines />
 
-                    <CheckboxInput label='Show Embed Chat Config' value={embedChatCheckboxVal} onChange={onCheckBoxEmbedChatChanged} />
+                    {/*<CheckboxInput label='Show Embed Chat Config' value={embedChatCheckboxVal} onChange={onCheckBoxEmbedChatChanged} />*/}
 
                     {embedChatCheckboxVal && (
                         <CopyBlock
