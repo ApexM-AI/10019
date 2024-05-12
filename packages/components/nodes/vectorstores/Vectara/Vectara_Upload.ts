@@ -38,14 +38,14 @@ class VectaraUpload_VectorStores implements INode {
                 label: 'File',
                 name: 'file',
                 description:
-                    'File to upload to Vectara.',
+                    'File to upload to Vectara. Supported file types: https://docs.vectara.com/docs/api-reference/indexing-apis/file-upload/file-upload-filetypes',
                 type: 'file'
             },
             {
                 label: 'Metadata Filter',
                 name: 'filter',
                 description:
-                    'Filter to apply to Vectara metadata.',
+                    'Filter to apply to Vectara metadata. Refer to the <a target="_blank" href="https://docs.flowiseai.com/vector-stores/vectara">documentation</a> on how to use Vectara filters with Flowise.',
                 type: 'string',
                 additionalParams: true,
                 optional: true

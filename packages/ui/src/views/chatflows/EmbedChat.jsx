@@ -40,7 +40,7 @@ function a11yProps(index) {
 
 const embedPopupHtmlCode = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -61,7 +61,7 @@ const App = () => {
 const embedFullpageHtmlCode = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -105,7 +105,7 @@ const buttonConfig = (isReact = false) => {
 const chatwindowConfig = (isReact = false) => {
     return isReact
         ? `chatWindow: {
-                    welcomeMessage: "Hello! How can I assist you today?",
+                    welcomeMessage: "Hello! This is custom welcome message",
                     backgroundColor: "#ffffff",
                     height: 700,
                     width: 400,
@@ -131,7 +131,7 @@ const chatwindowConfig = (isReact = false) => {
                     }
                 }`
         : `chatWindow: {
-                welcomeMessage: "Hello! How can I assist you today?",
+                welcomeMessage: "Hello! This is custom welcome message",
                 backgroundColor: "#ffffff",
                 height: 700,
                 width: 400,
@@ -160,7 +160,7 @@ const chatwindowConfig = (isReact = false) => {
 
 const embedPopupHtmlCodeCustomization = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -195,7 +195,7 @@ const App = () => {
 const embedFullpageHtmlCodeCustomization = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -223,7 +223,7 @@ const App = () => {
 }
 
 const EmbedChat = ({ chatflowid }) => {
-    const codes = ['Popup Html']
+    const codes = ['Popup Html', 'Fullpage Html', 'Popup React', 'Fullpage React']
     const [value, setValue] = useState(0)
     const [embedChatCheckboxVal, setEmbedChatCheckbox] = useState(false)
 
@@ -281,13 +281,26 @@ const EmbedChat = ({ chatflowid }) => {
                 <TabPanel key={index} value={value} index={index}>
                     {(value === 0 || value === 1) && (
                         <>
-                          
+                            <span>
+                                Paste this anywhere in the <code>{`<body>`}</code> tag of your html file.
+                                <p>
+                                    You can also specify a&nbsp;
+                                    <a
+                                        rel='noreferrer'
+                                        target='_blank'
+                                        href='https://www.npmjs.com/package/aritellavsn/ApexMchat?activeTab=versions'
+                                    >
+                                        version
+                                    </a>
+                                    :&nbsp;<code>{`https://cdn.jsdelivr.net/gh/aritellavsn/ApexMchat@<version>/dist/web.js`}</code>
+                                </p>
+                            </span>
                             <div style={{ height: 10 }}></div>
                         </>
                     )}
                     <CopyBlock theme={atomOneDark} text={getCode(codeLang)} language='javascript' showLineNumbers={false} wrapLines />
 
-                    
+                    <CheckboxInput label='Show Embed Chat Config' value={embedChatCheckboxVal} onChange={onCheckBoxEmbedChatChanged} />
 
                     {embedChatCheckboxVal && (
                         <CopyBlock
