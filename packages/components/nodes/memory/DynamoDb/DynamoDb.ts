@@ -46,8 +46,7 @@ class DynamoDb_Memory implements INode {
             label: 'Connect Credential',
             name: 'credential',
             type: 'credential',
-            credentialNames: ['dynamodbMemoryApi'],
-            optional: true
+            credentialNames: ['dynamodbMemoryApi']
         }
         this.inputs = [
             {
@@ -72,7 +71,7 @@ class DynamoDb_Memory implements INode {
                 name: 'sessionId',
                 type: 'string',
                 description:
-                    'If not specified, a random id will be used. Learn <a target="_blank" href="https://docs.flowiseai.com/memory/long-term-memory#ui-and-embedded-chat">more</a>',
+                    'If not specified, a random id will be used.',
                 default: '',
                 additionalParams: true,
                 optional: true
@@ -103,17 +102,12 @@ const initializeDynamoDB = async (nodeData: INodeData, options: ICommonObject): 
     const accessKeyId = getCredentialParam('accessKey', credentialData, nodeData)
     const secretAccessKey = getCredentialParam('secretAccessKey', credentialData, nodeData)
 
-    let credentials: DynamoDBClientConfig['credentials'] | undefined
-    if (accessKeyId && secretAccessKey) {
-        credentials = {
+    const config: DynamoDBClientConfig = {
+        region,
+        credentials: {
             accessKeyId,
             secretAccessKey
         }
-    }
-
-    const config: DynamoDBClientConfig = {
-        region,
-        credentials
     }
 
     const client = new DynamoDBClient(config ?? {})

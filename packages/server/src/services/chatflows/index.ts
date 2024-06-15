@@ -120,18 +120,17 @@ const getAllChatflows = async (type?: ChatflowType): Promise<IChatFlow[]> => {
     }
 }
 
-const getChatflowByApiKey = async (apiKeyId: string, keyonly?: unknown): Promise<any> => {
+const getChatflowByApiKey = async (apiKeyId: string): Promise<any> => {
     try {
         // Here we only get chatflows that are bounded by the apikeyid and chatflows that are not bounded by any apikey
         const appServer = getRunningExpressApp()
-        let query = appServer.AppDataSource.getRepository(ChatFlow)
+        const dbResponse = await appServer.AppDataSource.getRepository(ChatFlow)
             .createQueryBuilder('cf')
             .where('cf.apikeyid = :apikeyid', { apikeyid: apiKeyId })
-        if (keyonly === undefined) {
-            query = query.orWhere('cf.apikeyid IS NULL').orWhere('cf.apikeyid = ""')
-        }
-
-        const dbResponse = await query.orderBy('cf.name', 'ASC').getMany()
+            .orWhere('cf.apikeyid IS NULL')
+            .orWhere('cf.apikeyid = ""')
+            .orderBy('cf.name', 'ASC')
+            .getMany()
         if (dbResponse.length < 1) {
             throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow not found in the database!`)
         }
@@ -237,14 +236,10 @@ const getSinglePublicChatflow = async (chatflowId: string): Promise<any> => {
         }
         throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
     } catch (error) {
-        if (error instanceof InternalFlowiseError && error.statusCode === StatusCodes.UNAUTHORIZED) {
-            throw error
-        } else {
-            throw new InternalFlowiseError(
-                StatusCodes.INTERNAL_SERVER_ERROR,
-                `Error: chatflowsService.getSinglePublicChatflow - ${getErrorMessage(error)}`
-            )
-        }
+        throw new InternalFlowiseError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Error: chatflowsService.getSinglePublicChatflow - ${getErrorMessage(error)}`
+        )
     }
 }
 

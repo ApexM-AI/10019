@@ -40,7 +40,7 @@ function a11yProps(index) {
 
 const embedPopupHtmlCode = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -61,7 +61,7 @@ const App = () => {
 const embedFullpageHtmlCode = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -88,8 +88,7 @@ const buttonConfig = (isReact = false) => {
                     backgroundColor: "#3B81F6",
                     right: 20,
                     bottom: 20,
-                    size: 48, // small | medium | large | number
-                    dragAndDrop: true,
+                    size: "medium",
                     iconColor: "white",
                     customIconSrc: "https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg",
                 }`
@@ -97,8 +96,7 @@ const buttonConfig = (isReact = false) => {
                 backgroundColor: "#3B81F6",
                 right: 20,
                 bottom: 20,
-                size: 48, // small | medium | large | number
-                dragAndDrop: true,
+                size: "medium",
                 iconColor: "white",
                 customIconSrc: "https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg",
             }`
@@ -107,11 +105,7 @@ const buttonConfig = (isReact = false) => {
 const chatwindowConfig = (isReact = false) => {
     return isReact
         ? `chatWindow: {
-                    showTitle: true,
-                    title: 'Flowise Bot',
-                    titleAvatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
-                    welcomeMessage: 'Hello! This is custom welcome message',
-                    errorMessage: 'This is a custom error message',
+                    welcomeMessage: "Hello! How can I assist you today?",
                     backgroundColor: "#ffffff",
                     height: 700,
                     width: 400,
@@ -121,38 +115,23 @@ const chatwindowConfig = (isReact = false) => {
                         backgroundColor: "#f7f8ff",
                         textColor: "#303235",
                         showAvatar: true,
-                        avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
+                        avatarSrc: "https://i.imgur.com/x1owD1b.png",
                     },
                     userMessage: {
                         backgroundColor: "#3B81F6",
                         textColor: "#ffffff",
                         showAvatar: true,
-                        avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
+                        avatarSrc: "https://i.imgur.com/iQ3PGBR.png",
                     },
                     textInput: {
-                        placeholder: 'Type your question',
-                        backgroundColor: '#ffffff',
-                        textColor: '#303235',
-                        sendButtonColor: '#3B81F6',
-                        maxChars: 50,
-                        maxCharsWarningMessage: 'You exceeded the characters limit. Please input less than 50 characters.',
-                    },
-                    feedback: {
-                        color: '#303235',
-                    },
-                    footer: {
-                        textColor: '#303235',
-                        text: 'Powered by',
-                        company: 'Flowise',
-                        companyLink: 'https://flowiseai.com',
+                        placeholder: "Type your question",
+                        backgroundColor: "#ffffff",
+                        textColor: "#303235",
+                        sendButtonColor: "#3B81F6",
                     }
                 }`
         : `chatWindow: {
-                showTitle: true,
-                title: 'Flowise Bot',
-                titleAvatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
-                welcomeMessage: 'Hello! This is custom welcome message',
-                errorMessage: 'This is a custom error message',
+                welcomeMessage: "Hello! How can I assist you today?",
                 backgroundColor: "#ffffff",
                 height: 700,
                 width: 400,
@@ -162,37 +141,26 @@ const chatwindowConfig = (isReact = false) => {
                     backgroundColor: "#f7f8ff",
                     textColor: "#303235",
                     showAvatar: true,
-                    avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
+                    avatarSrc: "https://i.imgur.com/x1owD1b.png",
                 },
                 userMessage: {
                     backgroundColor: "#3B81F6",
                     textColor: "#ffffff",
                     showAvatar: true,
-                    avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
+                    avatarSrc: "https://i.imgur.com/iQ3PGBR.png",
                 },
                 textInput: {
-                    placeholder: 'Type your question',
-                    backgroundColor: '#ffffff',
-                    textColor: '#303235',
-                    sendButtonColor: '#3B81F6',
-                    maxChars: 50,
-                    maxCharsWarningMessage: 'You exceeded the characters limit. Please input less than 50 characters.',
-                },
-                feedback: {
-                    color: '#303235',
-                },
-                footer: {
-                    textColor: '#303235',
-                    text: 'Powered by',
-                    company: 'Flowise',
-                    companyLink: 'https://flowiseai.com',
+                    placeholder: "Type your question",
+                    backgroundColor: "#ffffff",
+                    textColor: "#303235",
+                    sendButtonColor: "#3B81F6",
                 }
             }`
 }
 
 const embedPopupHtmlCodeCustomization = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -227,7 +195,7 @@ const App = () => {
 const embedFullpageHtmlCodeCustomization = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -255,7 +223,7 @@ const App = () => {
 }
 
 const EmbedChat = ({ chatflowid }) => {
-    const codes = ['Popup Html', 'Fullpage Html', 'Popup React', 'Fullpage React']
+    const codes = ['Popup Html', /*'Fullpage Html', 'Popup React', 'Fullpage React'*/]
     const [value, setValue] = useState(0)
     const [embedChatCheckboxVal, setEmbedChatCheckbox] = useState(false)
 
@@ -315,24 +283,24 @@ const EmbedChat = ({ chatflowid }) => {
                         <>
                             <span>
                                 Paste this anywhere in the <code>{`<body>`}</code> tag of your html file.
-                                <p>
+                                {/*<p>
                                     You can also specify a&nbsp;
                                     <a
                                         rel='noreferrer'
                                         target='_blank'
-                                        href='https://www.npmjs.com/package/flowise-embed?activeTab=versions'
+                                        href='https://www.npmjs.com/package/ApexM-AI/devinai?activeTab=versions'
                                     >
                                         version
                                     </a>
-                                    :&nbsp;<code>{`https://cdn.jsdelivr.net/npm/flowise-embed@<version>/dist/web.js`}</code>
-                                </p>
+                                    :&nbsp;<code>{`https://cdn.jsdelivr.net/gh/ApexM-AI/devinai@<version>/dist/web.js`}</code>
+                    </p>*/}
                             </span>
                             <div style={{ height: 10 }}></div>
                         </>
                     )}
                     <CopyBlock theme={atomOneDark} text={getCode(codeLang)} language='javascript' showLineNumbers={false} wrapLines />
 
-                    <CheckboxInput label='Show Embed Chat Config' value={embedChatCheckboxVal} onChange={onCheckBoxEmbedChatChanged} />
+                    {/*<CheckboxInput label='Show Embed Chat Config' value={embedChatCheckboxVal} onChange={onCheckBoxEmbedChatChanged} />*/}
 
                     {embedChatCheckboxVal && (
                         <CopyBlock

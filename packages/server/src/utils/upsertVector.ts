@@ -22,7 +22,6 @@ import { getRunningExpressApp } from '../utils/getRunningExpressApp'
 import { UpsertHistory } from '../database/entities/UpsertHistory'
 import { InternalFlowiseError } from '../errors/internalFlowiseError'
 import { StatusCodes } from 'http-status-codes'
-import { getErrorMessage } from '../errors/utils'
 
 /**
  * Upsert documents
@@ -164,12 +163,10 @@ export const upsertVector = async (req: Request, isInternal: boolean = false) =>
         })
 
         return upsertedResult['result'] ?? { result: 'Successfully Upserted' }
-    } catch (e) {
-        logger.error('[server]: Error:', e)
-        if (e instanceof InternalFlowiseError && e.statusCode === StatusCodes.UNAUTHORIZED) {
-            throw e
-        } else {
-            throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, getErrorMessage(e))
+    } catch (error) {
+        logger.error('[server]: Error:', error)
+        if (error instanceof Error) {
+            throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, error.message)
         }
     }
 }

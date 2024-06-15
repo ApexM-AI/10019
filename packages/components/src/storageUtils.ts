@@ -1,13 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import {
-    DeleteObjectsCommand,
-    GetObjectCommand,
-    ListObjectsV2Command,
-    PutObjectCommand,
-    S3Client,
-    S3ClientConfig
-} from '@aws-sdk/client-s3'
+import { DeleteObjectsCommand, GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { Readable } from 'node:stream'
 import { getUserHome } from './utils'
 
@@ -318,20 +311,14 @@ export const getS3Config = () => {
     const secretAccessKey = process.env.S3_STORAGE_SECRET_ACCESS_KEY
     const region = process.env.S3_STORAGE_REGION
     const Bucket = process.env.S3_STORAGE_BUCKET_NAME
-    if (!region || !Bucket) {
+    if (!accessKeyId || !secretAccessKey || !region || !Bucket) {
         throw new Error('S3 storage configuration is missing')
     }
-
-    let credentials: S3ClientConfig['credentials'] | undefined
-    if (accessKeyId && secretAccessKey) {
-        credentials = {
+    const s3Client = new S3Client({
+        credentials: {
             accessKeyId,
             secretAccessKey
-        }
-    }
-
-    const s3Client = new S3Client({
-        credentials,
+        },
         region
     })
     return { s3Client, Bucket }
