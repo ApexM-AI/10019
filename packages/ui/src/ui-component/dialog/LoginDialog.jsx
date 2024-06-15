@@ -12,7 +12,7 @@ const LoginDialog = ({ show, dialogProps, onConfirm }) => {
         label: 'Username',
         name: 'username',
         type: 'string',
-        placeholder: '452291419'
+        placeholder: 'john doe'
     }
     const passwordInput = {
         label: 'Password',
@@ -39,7 +39,7 @@ const LoginDialog = ({ show, dialogProps, onConfirm }) => {
                 {dialogProps.title}
             </DialogTitle>
             <DialogContent>
-                <Typography>Auth Code</Typography>
+                <Typography>Username</Typography>
                 <Input
                     inputParam={usernameInput}
                     onChange={(newValue) => setUsernameVal(newValue)}
@@ -47,7 +47,7 @@ const LoginDialog = ({ show, dialogProps, onConfirm }) => {
                     showDialog={false}
                 />
                 <div style={{ marginTop: 20 }}></div>
-                <Typography>Secret Key</Typography>
+                <Typography>Password</Typography>
                 <Input inputParam={passwordInput} onChange={(newValue) => setPasswordVal(newValue)} value={passwordVal} />
             </DialogContent>
             <DialogActions>
