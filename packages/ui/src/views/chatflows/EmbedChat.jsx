@@ -126,8 +126,9 @@ const chatwindowConfig = (isReact = false) => {
     return isReact
         ? `chatWindow: {
                     showTitle: true,
-                    title: 'Devin Bot',
+                    title: 'DevinAI Bot',
                     titleAvatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
+                    showAgentMessages: true,
                     welcomeMessage: 'Hello! How can I assist you today?',
                     errorMessage: 'This is a custom error message',
                     backgroundColor: "#ffffff",
@@ -155,6 +156,10 @@ const chatwindowConfig = (isReact = false) => {
                         maxChars: 50,
                         maxCharsWarningMessage: 'You exceeded the characters limit. Please input less than 50 characters.',
                         autoFocus: true, // If not used, autofocus is disabled on mobile and enabled on desktop. true enables it on both, false disables it on both.
+                        sendMessageSound: true,
+                        // sendSoundLocation: "send_message.mp3", // If this is not used, the default sound effect will be played if sendSoundMessage is true.
+                        receiveMessageSound: true,
+                        // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true.
                     },
                     feedback: {
                         color: '#303235',
@@ -168,8 +173,9 @@ const chatwindowConfig = (isReact = false) => {
                 }`
         : `chatWindow: {
                 showTitle: true,
-                title: 'Devin Bot',
+                title: 'DevinAI Bot',
                 titleAvatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
+                showAgentMessages: true,
                 welcomeMessage: 'Hello! How can I assist you today?',
                 errorMessage: 'This is a custom error message',
                 backgroundColor: "#ffffff",
@@ -197,6 +203,10 @@ const chatwindowConfig = (isReact = false) => {
                     maxChars: 50,
                     maxCharsWarningMessage: 'You exceeded the characters limit. Please input less than 50 characters.',
                     autoFocus: true, // If not used, autofocus is disabled on mobile and enabled on desktop. true enables it on both, false disables it on both.
+                    sendMessageSound: true,
+                    // sendSoundLocation: "send_message.mp3", // If this is not used, the default sound effect will be played if sendSoundMessage is true.
+                    receiveMessageSound: true,
+                    // receiveSoundLocation: "receive_message.mp3", // If this is not used, the default sound effect will be played if receiveSoundMessage is true. 
                 },
                 feedback: {
                     color: '#303235',
@@ -205,7 +215,7 @@ const chatwindowConfig = (isReact = false) => {
                     textColor: '#303235',
                     text: 'Powered by',
                     company: 'DevinAI',
-                    companyLink: 'https://devineai.com',
+                    companyLink: 'https://devinai.com',
                 }
             }`
 }
@@ -347,7 +357,7 @@ const EmbedChat = ({ chatflowid }) => {
                                         version
                                     </a>
                                     :&nbsp;<code>{`https://cdn.jsdelivr.net/gh/ApexM-AI/devinai@<version>/dist/web.js`}</code>
-                    </p>*/}
+                                </p>*/}
                             </span>
                             <div style={{ height: 10 }}></div>
                         </>
