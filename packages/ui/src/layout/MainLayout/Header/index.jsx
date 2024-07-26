@@ -91,7 +91,7 @@ const Header = ({ handleLeftDrawerToggle }) => {
 
     return (
         <>
-            {/* logo & toggler button */}
+            {/* logo & toggler button 
             <Box
                 sx={{
                     width: 228,
@@ -104,7 +104,7 @@ const Header = ({ handleLeftDrawerToggle }) => {
                 <Box component='span' sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}>
                     <LogoSection />
                 </Box>
-              {/*}  <ButtonBase sx={{ borderRadius: '12px', overflow: 'hidden' }}>
+               <ButtonBase sx={{ borderRadius: '12px', overflow: 'hidden' }}>
                     <Avatar
                         variant='rounded'
                         sx={{
@@ -123,8 +123,8 @@ const Header = ({ handleLeftDrawerToggle }) => {
                     >
                         <IconMenu2 stroke={1.5} size='1.3rem' />
                     </Avatar>
-                </ButtonBase> */}
-            </Box>
+                </ButtonBase>
+            </Box> */}
             <Box sx={{ flexGrow: 1 }} />
             <MaterialUISwitch checked={isDark} onChange={changeDarkMode} />
             <Box sx={{ ml: 2 }}></Box>
