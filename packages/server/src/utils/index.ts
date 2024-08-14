@@ -503,14 +503,7 @@ export const buildFlow = async ({
 
             if (isUpsert) upsertHistory['flowData'] = saveUpsertFlowData(flowNodeData, upsertHistory)
 
-            const reactFlowNodeData: INodeData = await resolveVariables(
-                appDataSource,
-                flowNodeData,
-                flowNodes,
-                question,
-                chatHistory,
-                overrideConfig
-            )
+            const reactFlowNodeData: INodeData = resolveVariables(flowNodeData, flowNodes, question, chatHistory)
 
             if (isUpsert && stopNodeId && nodeId === stopNodeId) {
                 logger.debug(`[server]: Upserting ${reactFlowNode.data.label} (${reactFlowNode.data.id})`)
@@ -698,53 +691,6 @@ export const clearSessionMemory = async (
     }
 }
 
-const getGlobalVariable = async (appDataSource: DataSource, overrideConfig?: ICommonObject) => {
-    const variables = await appDataSource.getRepository(Variable).find()
-
-    // override variables defined in overrideConfig
-    // nodeData.inputs.vars is an Object, check each property and override the variable
-    if (overrideConfig?.vars) {
-        for (const propertyName of Object.getOwnPropertyNames(overrideConfig.vars)) {
-            const foundVar = variables.find((v) => v.name === propertyName)
-            if (foundVar) {
-                // even if the variable was defined as runtime, we override it with static value
-                foundVar.type = 'static'
-                foundVar.value = overrideConfig.vars[propertyName]
-            } else {
-                // add it the variables, if not found locally in the db
-                variables.push({
-                    name: propertyName,
-                    type: 'static',
-                    value: overrideConfig.vars[propertyName],
-                    id: '',
-                    updatedDate: new Date(),
-                    createdDate: new Date()
-                })
-            }
-        }
-    }
-
-    let vars = {}
-    if (variables.length) {
-        for (const item of variables) {
-            let value = item.value
-
-            // read from .env file
-            if (item.type === 'runtime') {
-                value = process.env[item.name] ?? ''
-            }
-
-            Object.defineProperty(vars, item.name, {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: value
-            })
-        }
-    }
-    return vars
-}
-
 /**
  * Get variable value from outputResponses.output
  * @param {string} paramValue
@@ -753,14 +699,12 @@ const getGlobalVariable = async (appDataSource: DataSource, overrideConfig?: ICo
  * @param {boolean} isAcceptVariable
  * @returns {string}
  */
-export const getVariableValue = async (
-    appDataSource: DataSource,
+export const getVariableValue = (
     paramValue: string | object,
     reactFlowNodes: IReactFlowNode[],
     question: string,
     chatHistory: IMessage[],
-    isAcceptVariable = false,
-    overrideConfig?: ICommonObject
+    isAcceptVariable = false
 ) => {
     const isObject = typeof paramValue === 'object'
     let returnVal = (isObject ? JSON.stringify(paramValue) : paramValue) ?? ''
@@ -794,15 +738,6 @@ export const getVariableValue = async (
 
             if (isAcceptVariable && variableFullPath === CHAT_HISTORY_VAR_PREFIX) {
                 variableDict[`{{${variableFullPath}}}`] = handleEscapeCharacters(convertChatHistoryToText(chatHistory), false)
-            }
-
-            if (variableFullPath.startsWith('$vars.')) {
-                const vars = await getGlobalVariable(appDataSource, overrideConfig)
-                const variableValue = get(vars, variableFullPath.replace('$vars.', ''))
-                if (variableValue) {
-                    variableDict[`{{${variableFullPath}}}`] = variableValue
-                    returnVal = returnVal.split(`{{${variableFullPath}}}`).join(variableValue)
-                }
             }
 
             // Resolve values with following case.
@@ -891,53 +826,35 @@ export const getVariableValue = async (
  * @param {string} question
  * @returns {INodeData}
  */
-export const resolveVariables = async (
-    appDataSource: DataSource,
+export const resolveVariables = (
     reactFlowNodeData: INodeData,
     reactFlowNodes: IReactFlowNode[],
     question: string,
-    chatHistory: IMessage[],
-    overrideConfig?: ICommonObject
-): Promise<INodeData> => {
+    chatHistory: IMessage[]
+): INodeData => {
     let flowNodeData = cloneDeep(reactFlowNodeData)
     const types = 'inputs'
 
-    const getParamValues = async (paramsObj: ICommonObject) => {
+    const getParamValues = (paramsObj: ICommonObject) => {
         for (const key in paramsObj) {
             const paramValue: string = paramsObj[key]
             if (Array.isArray(paramValue)) {
                 const resolvedInstances = []
                 for (const param of paramValue) {
-                    const resolvedInstance = await getVariableValue(
-                        appDataSource,
-                        param,
-                        reactFlowNodes,
-                        question,
-                        chatHistory,
-                        undefined,
-                        overrideConfig
-                    )
+                    const resolvedInstance = getVariableValue(param, reactFlowNodes, question, chatHistory)
                     resolvedInstances.push(resolvedInstance)
                 }
                 paramsObj[key] = resolvedInstances
             } else {
                 const isAcceptVariable = reactFlowNodeData.inputParams.find((param) => param.name === key)?.acceptVariable ?? false
-                const resolvedInstance = await getVariableValue(
-                    appDataSource,
-                    paramValue,
-                    reactFlowNodes,
-                    question,
-                    chatHistory,
-                    isAcceptVariable,
-                    overrideConfig
-                )
+                const resolvedInstance = getVariableValue(paramValue, reactFlowNodes, question, chatHistory, isAcceptVariable)
                 paramsObj[key] = resolvedInstance
             }
         }
     }
 
     const paramsObj = flowNodeData[types] ?? {}
-    await getParamValues(paramsObj)
+    getParamValues(paramsObj)
 
     return flowNodeData
 }
@@ -1235,10 +1152,10 @@ export const isFlowValidForStream = (reactFlowNodes: IReactFlowNode[], endingNod
         ]
         isValidChainOrAgent = whitelistAgents.includes(endingNodeData.name)
 
-        // Anthropic streaming has some bug where the log is being sent, temporarily disabled
+        // Anthropic & Groq Function Calling streaming is still not supported - https://docs.anthropic.com/claude/docs/tool-use
         const model = endingNodeData.inputs?.model
         if (endingNodeData.name.includes('toolAgent')) {
-            if (typeof model === 'string' && model.includes('chatAnthropic')) {
+            if (typeof model === 'string' && (model.includes('chatAnthropic') || model.includes('groqChat'))) {
                 return false
             } else if (typeof model === 'object' && 'id' in model && model['id'].includes('chatAnthropic')) {
                 return false
