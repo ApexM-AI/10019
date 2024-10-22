@@ -40,7 +40,7 @@ function a11yProps(index) {
 
 const embedPopupHtmlCode = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -61,7 +61,7 @@ const App = () => {
 const embedFullpageHtmlCode = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -92,6 +92,11 @@ const buttonConfig = (isReact = false) => {
                     dragAndDrop: true,
                     iconColor: "white",
                     customIconSrc: "https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg",
+                    autoWindowOpen: {
+                        autoOpen: true, //parameter to control automatic window opening
+                        openDelay: 2, // Optional parameter for delay time in seconds
+                        autoOpenOnMobile: false, //parameter to control automatic window opening in mobile
+                        },
                 }`
         : `button: {
                 backgroundColor: "#3B81F6",
@@ -101,6 +106,11 @@ const buttonConfig = (isReact = false) => {
                 dragAndDrop: true,
                 iconColor: "white",
                 customIconSrc: "https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg",
+                autoWindowOpen: {
+                    autoOpen: true, //parameter to control automatic window opening
+                    openDelay: 2, // Optional parameter for delay time in seconds
+                    autoOpenOnMobile: false, //parameter to control automatic window opening in mobile
+                    },
             }`
 }
 
@@ -126,27 +136,30 @@ const chatwindowConfig = (isReact = false) => {
     return isReact
         ? `chatWindow: {
                     showTitle: true,
-                    title: 'DevinAI Bot',
+                    title: 'Flowise Bot',
                     titleAvatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
                     showAgentMessages: true,
-                    welcomeMessage: 'Hello! How can I help you today?',
+                    welcomeMessage: 'Hello! This is custom welcome message',
                     errorMessage: 'This is a custom error message',
                     backgroundColor: "#ffffff",
+                    backgroundImage: 'enter image path or link', // If set, this will overlap the background color of the chat window.
                     height: 700,
                     width: 400,
                     fontSize: 16,
-                    poweredByTextColor: "#303235",
+                    //starterPrompts: ['What is a bot?', 'Who are you?'], // It overrides the starter prompts set by the chat flow passed
+                    starterPromptFontSize: 15,
+                    clearChatOnReload: false, // If set to true, the chat will be cleared when the page reloads.
                     botMessage: {
                         backgroundColor: "#f7f8ff",
                         textColor: "#303235",
                         showAvatar: true,
-                        avatarSrc: "https://i.imgur.com/x1owD1b.png",
+                        avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
                     },
                     userMessage: {
                         backgroundColor: "#3B81F6",
                         textColor: "#ffffff",
                         showAvatar: true,
-                        avatarSrc: "https://i.imgur.com/iQ3PGBR.png",
+                        avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
                     },
                     textInput: {
                         placeholder: 'Type your question',
@@ -167,33 +180,36 @@ const chatwindowConfig = (isReact = false) => {
                     footer: {
                         textColor: '#303235',
                         text: 'Powered by',
-                        company: 'DevinAI',
-                        companyLink: 'https://devinai.com',
+                        company: 'Flowise',
+                        companyLink: 'https://flowiseai.com',
                     }
                 }`
         : `chatWindow: {
                 showTitle: true,
-                title: 'DevinAI Bot',
+                title: 'Flowise Bot',
                 titleAvatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
                 showAgentMessages: true,
                 welcomeMessage: 'Hello! This is custom welcome message',
                 errorMessage: 'This is a custom error message',
                 backgroundColor: "#ffffff",
+                backgroundImage: 'enter image path or link', // If set, this will overlap the background color of the chat window.
                 height: 700,
                 width: 400,
                 fontSize: 16,
-                poweredByTextColor: "#303235",
+                //starterPrompts: ['What is a bot?', 'Who are you?'], // It overrides the starter prompts set by the chat flow passed
+                starterPromptFontSize: 15,
+                clearChatOnReload: false, // If set to true, the chat will be cleared when the page reloads.
                 botMessage: {
                     backgroundColor: "#f7f8ff",
                     textColor: "#303235",
                     showAvatar: true,
-                    avatarSrc: "https://i.imgur.com/x1owD1b.png",
+                    avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/parroticon.png",
                 },
                 userMessage: {
                     backgroundColor: "#3B81F6",
                     textColor: "#ffffff",
                     showAvatar: true,
-                    avatarSrc: "https://i.imgur.com/iQ3PGBR.png",
+                    avatarSrc: "https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png",
                 },
                 textInput: {
                     placeholder: 'Type your question',
@@ -214,15 +230,15 @@ const chatwindowConfig = (isReact = false) => {
                 footer: {
                     textColor: '#303235',
                     text: 'Powered by',
-                    company: 'DevinAI',
-                    companyLink: 'https://devinai.com',
+                    company: 'Flowise',
+                    companyLink: 'https://flowiseai.com',
                 }
             }`
 }
 
 const embedPopupHtmlCodeCustomization = (chatflowid) => {
     return `<script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
     Chatbot.init({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -259,7 +275,7 @@ const App = () => {
 const embedFullpageHtmlCodeCustomization = (chatflowid) => {
     return `<flowise-fullchatbot></flowise-fullchatbot>
 <script type="module">
-    import Chatbot from "https://cdn.jsdelivr.net/gh/ApexM-AI/devinai/dist/web.js"
+    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
     Chatbot.initFull({
         chatflowid: "${chatflowid}",
         apiHost: "${baseURL}",
@@ -287,7 +303,7 @@ const App = () => {
 }
 
 const EmbedChat = ({ chatflowid }) => {
-    const codes = ['Popup Html' /*'Fullpage Html', 'Popup React', 'Fullpage React'*/]
+    const codes = ['Popup Html', 'Fullpage Html', 'Popup React', 'Fullpage React']
     const [value, setValue] = useState(0)
     const [embedChatCheckboxVal, setEmbedChatCheckbox] = useState(false)
 
@@ -347,7 +363,7 @@ const EmbedChat = ({ chatflowid }) => {
                         <>
                             <span>
                                 Paste this anywhere in the <code>{`<body>`}</code> tag of your html file.
-                               {/* <p>
+                                <p>
                                     You can also specify a&nbsp;
                                     <a
                                         rel='noreferrer'
@@ -357,7 +373,7 @@ const EmbedChat = ({ chatflowid }) => {
                                         version
                                     </a>
                                     :&nbsp;<code>{`https://cdn.jsdelivr.net/npm/flowise-embed@<version>/dist/web.js`}</code>
-                                </p> */}
+                                </p>
                             </span>
                             <div style={{ height: 10 }}></div>
                         </>
